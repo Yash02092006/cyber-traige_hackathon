@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cyber Triage Tool - Correlated Attack Timeline | SIH1744">
+  <meta name="theme-color" content="#08090c">
+  <title>Attack Timeline | Cyber Triage Tool</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- Global Technical Header -->
+  <header class="app-header font-mono" role="banner">
+    <div class="nav-wrapper">
+      <a href="index.html" class="nav-brand" title="Return to Overview">
+        <span class="brand-badge">CT</span>
+        <div class="brand-text">
+          <span class="brand-title">CYBER TRIAGE TOOL</span>
+          <span class="brand-meta">SIH1744 &bull; SIH 2024</span>
+        </div>
+      </a>
+
+      <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
+
+      <ul class="nav-links" id="navLinksContainer">
+        <li><a href="index.html" class="nav-link">HOME</a></li>
+        <li><a href="dashboard.html" class="nav-link">DASHBOARD</a></li>
+        <li><a href="evidence.html" class="nav-link">EVIDENCE</a></li>
+        <li><a href="ioc.html" class="nav-link">IOC ANALYSIS</a></li>
+        <li><a href="timeline.html" class="nav-link active">TIMELINE</a></li>
+        <li><a href="graph.html" class="nav-link">GRAPH</a></li>
+        <li><a href="reports.html" class="nav-link">REPORTS</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div class="case-indicator">
+          <span class="case-pulse"></span>
+          <span>CASE #2024-TRIAGE-01</span>
+        </div>
+        <button type="button" class="btn-acquire-quick font-mono" title="Acquire new forensic evidence file">
+          <span>+ ACQUIRE</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container" style="margin-top: 24px;">
+    
+    <!-- Page Header -->
+    <section class="page-header" aria-label="Timeline Header">
+      <div class="header-left">
+        <span class="page-category font-mono">CHRONOLOGICAL EVENT NORMALIZATION</span>
+        <h1 class="page-title">Correlated Attack Timeline</h1>
+        <p class="page-subtitle">
+          Super-timeline reconstructing the adversary kill chain from initial user logon to credential harvesting, lateral movement, and data exfiltration.
+        </p>
+      </div>
+      <div class="header-right font-mono">
+        <button type="button" class="action-btn" id="exportTimelineJsonBtn">EXPORT JSON TIMELINE</button>
+      </div>
+    </section>
+
+    <!-- Toolbar: Severity & Type Filters -->
+    <section class="data-panel" aria-label="Timeline Filters">
+      <div class="panel-toolbar font-mono">
+        <div class="toolbar-search">
+          <span style="color: var(--text-muted); margin-right: 8px;">&#128269;</span>
+          <input type="text" id="timelineSearchInput" class="search-input" placeholder="SEARCH TIMELINE EVENTS, MITRE TAGS, USERS...">
+        </div>
+
+        <div class="toolbar-filters">
+          <!-- Severity Filter -->
+          <label for="timelineSeverityFilter" style="font-size: 0.68rem; color: var(--text-muted);">SEVERITY:</label>
+          <select id="timelineSeverityFilter" class="custom-select">
+            <option value="ALL">ALL SEVERITIES</option>
+            <option value="CRITICAL">CRITICAL</option>
+            <option value="HIGH">HIGH</option>
+            <option value="MEDIUM">MEDIUM</option>
+            <option value="LOW">LOW</option>
+          </select>
+
+          <!-- Type Filter -->
+          <label for="timelineTypeFilter" style="font-size: 0.68rem; color: var(--text-muted);">CATEGORY:</label>
+          <select id="timelineTypeFilter" class="custom-select">
+            <option value="ALL">ALL CATEGORIES</option>
+            <option value="Authentication">AUTHENTICATION</option>
+            <option value="Web">WEB / DOWNLOAD</option>
+            <option value="File">FILE ARTIFACTS</option>
+            <option value="Execution">PROCESS EXECUTION</option>
+            <option value="Network">NETWORK &amp; C2</option>
+            <option value="System">SYSTEM &amp; SERVICES</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <!-- Interactive Chronological Stream -->
+    <section class="timeline-stream font-mono" id="timelineStreamContainer" aria-label="Chronological Events Stream">
+      <!-- Injected dynamically by js/timeline.js -->
+    </section>
+
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/timeline.js"></script>
+</body>
+</html>

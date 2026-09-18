@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cyber Triage Tool - Forensic Investigation Case Dossier & Report Generator | SIH1744">
+  <meta name="theme-color" content="#08090c">
+  <title>Investigation Reports | Cyber Triage Tool</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- Global Technical Header -->
+  <header class="app-header font-mono" role="banner">
+    <div class="nav-wrapper">
+      <a href="index.html" class="nav-brand" title="Return to Overview">
+        <span class="brand-badge">CT</span>
+        <div class="brand-text">
+          <span class="brand-title">CYBER TRIAGE TOOL</span>
+          <span class="brand-meta">SIH1744 &bull; SIH 2024</span>
+        </div>
+      </a>
+
+      <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
+
+      <ul class="nav-links" id="navLinksContainer">
+        <li><a href="index.html" class="nav-link">HOME</a></li>
+        <li><a href="dashboard.html" class="nav-link">DASHBOARD</a></li>
+        <li><a href="evidence.html" class="nav-link">EVIDENCE</a></li>
+        <li><a href="ioc.html" class="nav-link">IOC ANALYSIS</a></li>
+        <li><a href="timeline.html" class="nav-link">TIMELINE</a></li>
+        <li><a href="graph.html" class="nav-link">GRAPH</a></li>
+        <li><a href="reports.html" class="nav-link active">REPORTS</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div class="case-indicator">
+          <span class="case-pulse"></span>
+          <span>CASE #2024-TRIAGE-01</span>
+        </div>
+        <button type="button" class="btn-acquire-quick font-mono" title="Acquire new forensic evidence file">
+          <span>+ ACQUIRE</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container" style="margin-top: 24px;">
+    
+    <!-- Page Header -->
+    <section class="page-header" aria-label="Reports Dossier Header">
+      <div class="header-left">
+        <span class="page-category font-mono">DIGITAL FORENSICS CASE DOSSIER</span>
+        <h1 class="page-title">Forensic Incident Report</h1>
+        <p class="page-subtitle">
+          Comprehensive executive and technical case report consolidating evidence telemetry, IoC indicators, kill chain chronology, and court-admissible chain of custody.
+        </p>
+      </div>
+      <div class="header-right font-mono">
+        <button type="button" class="table-action-btn" id="printReportBtn">&#128438; PRINT / PDF</button>
+        <button type="button" class="table-action-btn" id="downloadTxtReportBtn">&#128196; DOWNLOAD TXT</button>
+        <button type="button" class="action-btn" id="generateHtmlReportBtn">&#128229; GENERATE REPORT (HTML)</button>
+      </div>
+    </section>
+
+    <!-- Report Paper Viewport -->
+    <article class="report-paper font-mono" id="reportContent" aria-label="Official Forensic Incident Report">
+      
+      <!-- Report Header Banner -->
+      <div class="report-header-banner">
+        <div>
+          <span class="badge badge-critical" style="font-size: 0.75rem; margin-bottom: 8px;">CONFIDENTIAL // FORENSIC TRIAGE REPORT</span>
+          <h2 style="color: var(--text-white); font-size: 1.6rem; font-weight: 900; margin-top: 6px;">CASE #2024-TRIAGE-01: WS-04 HOST COMPROMISE</h2>
+          <span style="color: var(--text-secondary); font-size: 0.8rem;">SIH1744 &bull; Smart India Hackathon 2024 &bull; Cyber Triage Platform</span>
+        </div>
+        <div style="text-align: right; font-size: 0.74rem; color: var(--text-muted);">
+          <div>INVESTIGATION DATE: <span style="color: var(--text-white);" id="reportDate">2024-10-14</span></div>
+          <div>LEAD EXAMINER: <span style="color: var(--text-white);">DFIR_TRIAGE_TEAM</span></div>
+          <div>STATUS: <span style="color: var(--color-accent-red); font-weight: 700;">ACTIVE CONTAINMENT</span></div>
+        </div>
+      </div>
+
+      <!-- Section 1: Executive Summary -->
+      <section class="report-section">
+        <h3 class="report-heading">// 1.0 EXECUTIVE SUMMARY</h3>
+        <p style="color: var(--text-primary); font-family: var(--font-sans); font-size: 0.88rem; line-height: 1.6;">
+          On October 14, 2024 at 09:42 UTC, workstation <strong style="color: var(--text-white);">WS-04</strong> was compromised via a spearphishing email with a link pointing to weaponized dropper <code style="color: var(--color-accent-red);">invoice_oct2024.pdf.exe</code> hosted on bulletproof domain <code style="color: var(--color-accent-red);">cloud-secure-share.net</code>. The adversary extracted a secondary Cobalt Strike stager (<code style="color: var(--color-accent-red);">updater.exe</code>) to user temp space, initiated an encrypted C2 beacon to <code style="color: var(--color-accent-red);">185.220.101.44</code>, dumped LSASS credentials, replayed Domain Admin tokens to laterally move to primary Domain Controller <code style="color: var(--text-white);">DC-01</code>, and staged 34.4 MB of intellectual property for external exfiltration before attempting audit log destruction.
+        </p>
+      </section>
+
+      <!-- Section 2: Case Metrics & Evidence Statistics -->
+      <section class="report-section">
+        <h3 class="report-heading">// 2.0 EVIDENCE TELEMETRY STATISTICS</h3>
+        <div class="metrics-grid" style="grid-template-columns: repeat(4, 1fr); margin-top: 6px;">
+          <div class="metric-card accent-cyan">
+            <div class="metric-header"><span>TOTAL ARTIFACTS</span></div>
+            <div class="metric-value" id="repStatTotal">--</div>
+            <div class="metric-footer">Ingested &amp; cataloged</div>
+          </div>
+          <div class="metric-card accent-red">
+            <div class="metric-header"><span>CRITICAL FINDINGS</span></div>
+            <div class="metric-value" id="repStatCrit">--</div>
+            <div class="metric-footer">Risk score &ge; 80 / 100</div>
+          </div>
+          <div class="metric-card accent-orange">
+            <div class="metric-header"><span>HIGH SEVERITY</span></div>
+            <div class="metric-value" id="repStatHigh">--</div>
+            <div class="metric-footer">Confirmed threats</div>
+          </div>
+          <div class="metric-card accent-amber">
+            <div class="metric-header"><span>CONFIRMED IOCs</span></div>
+            <div class="metric-value" id="repStatIocs">--</div>
+            <div class="metric-footer">Network &amp; file hashes</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 3: Critical Findings Table -->
+      <section class="report-section">
+        <h3 class="report-heading">// 3.0 HIGH-PRIORITY FORENSIC FINDINGS</h3>
+        <div class="table-responsive">
+          <table class="triage-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>TYPE</th>
+                <th>EVIDENCE ARTIFACT</th>
+                <th>RISK SCORE</th>
+                <th>MITRE ATT&CK</th>
+              </tr>
+            </thead>
+            <tbody id="reportCriticalFindingsBody">
+              <!-- Dynamically populated by reports.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Section 4: Key Indicators of Compromise (IOCs) -->
+      <section class="report-section">
+        <h3 class="report-heading">// 4.0 CONFIRMED INDICATORS OF COMPROMISE (IOCs)</h3>
+        <div class="table-responsive">
+          <table class="triage-table">
+            <thead>
+              <tr>
+                <th>INDICATOR</th>
+                <th>TYPE</th>
+                <th>THREAT LEVEL</th>
+                <th>INFRASTRUCTURE CONTEXT</th>
+              </tr>
+            </thead>
+            <tbody id="reportIocTableBody">
+              <!-- Dynamically populated by reports.js -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Section 5: Kill Chain Timeline Reconstruction -->
+      <section class="report-section">
+        <h3 class="report-heading">// 5.0 ATTACK KILL CHAIN CHRONOLOGY</h3>
+        <div style="display: flex; flex-direction: column; gap: 8px;" id="reportTimelineBody">
+          <!-- Dynamically populated by reports.js -->
+        </div>
+      </section>
+
+      <!-- Section 6: Chain of Custody & Forensic Integrity -->
+      <section class="report-section">
+        <h3 class="report-heading">// 6.0 CHAIN OF CUSTODY &amp; VERIFICATION LOG</h3>
+        <div style="background: var(--bg-panel); border: 1px solid var(--border-subtle); padding: 16px; font-size: 0.78rem; line-height: 1.6; color: var(--text-secondary);">
+          <div><strong>ACQUISITION METHODOLOGY:</strong> Live forensic memory extraction &amp; NTFS physical volume parsing.</div>
+          <div><strong>CRYPTOGRAPHIC INTEGRITY:</strong> Bitstream images verified with SHA-256 and Blake3 dual-hash verification.</div>
+          <div><strong>CUSTODY STORAGE:</strong> Encrypted forensic safe vault volume <code>//VAULT-FORENSIC-01/CASES/2024-TRIAGE-01/</code>.</div>
+          <div><strong>COMPLIANCE:</strong> ISO/IEC 27037 guidelines for digital evidence identification, collection, acquisition, and preservation.</div>
+        </div>
+      </section>
+
+      <!-- Report Footer Signature -->
+      <div style="border-top: 1px solid var(--border-subtle); padding-top: 16px; display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted);">
+        <div>REPORT DIGEST: <span class="font-mono" style="color: var(--color-accent-red);">d8a4f910398bbac91203912a83019283</span></div>
+        <div>GENERATED VIA SIH1744 CYBER TRIAGE ENGINE &bull; CONFIDENTIAL</div>
+      </div>
+
+    </article>
+
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/reports.js"></script>
+</body>
+</html>

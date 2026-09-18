@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cyber Triage Tool - Investigation Dashboard | SIH1744">
+  <meta name="theme-color" content="#08090c">
+  <title>Dashboard | Cyber Triage Tool</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- Global Technical App Header & Navigation -->
+  <header class="app-header font-mono" role="banner">
+    <div class="nav-wrapper">
+      <a href="index.html" class="nav-brand" title="Return to Overview">
+        <span class="brand-badge">CT</span>
+        <div class="brand-text">
+          <span class="brand-title">CYBER TRIAGE TOOL</span>
+          <span class="brand-meta">SIH1744 &bull; SIH 2024</span>
+        </div>
+      </a>
+
+      <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
+
+      <ul class="nav-links" id="navLinksContainer">
+        <li><a href="index.html" class="nav-link">HOME</a></li>
+        <li><a href="dashboard.html" class="nav-link active">DASHBOARD</a></li>
+        <li><a href="evidence.html" class="nav-link">EVIDENCE</a></li>
+        <li><a href="ioc.html" class="nav-link">IOC ANALYSIS</a></li>
+        <li><a href="timeline.html" class="nav-link">TIMELINE</a></li>
+        <li><a href="graph.html" class="nav-link">GRAPH</a></li>
+        <li><a href="reports.html" class="nav-link">REPORTS</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div class="case-indicator">
+          <span class="case-pulse"></span>
+          <span>CASE #2024-TRIAGE-01</span>
+        </div>
+        <button type="button" class="btn-acquire-quick font-mono" title="Acquire new forensic evidence file">
+          <span>+ ACQUIRE</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container" style="margin-top: 24px;">
+    
+    <!-- Page Header & Triage Stage Bar -->
+    <section class="page-header" aria-label="Dashboard Overview">
+      <div class="header-left">
+        <span class="page-category font-mono">INCIDENT TRIAGE OVERVIEW</span>
+        <h1 class="page-title">Investigation Dashboard</h1>
+        <p class="page-subtitle">
+          Real-time telemetry and automated heuristic risk correlation for incident response triage on target host <code class="font-mono" style="color: var(--color-accent-red);">WS-04.CORP.INTERNAL</code>.
+        </p>
+      </div>
+      <div class="header-right font-mono">
+        <button type="button" class="table-action-btn" id="refreshStatsBtn">REFRESH DATA</button>
+        <button type="button" class="action-btn" onclick="location.href='reports.html'">VIEW DOSSIER</button>
+      </div>
+    </section>
+
+    <!-- 4 Key Dynamic Metrics -->
+    <section class="metrics-grid font-mono" aria-label="Key Forensic Statistics">
+      <div class="metric-card accent-cyan">
+        <div class="metric-header">
+          <span>TOTAL EVIDENCE</span>
+          <span class="metric-icon">&#128193;</span>
+        </div>
+        <div class="metric-value" id="statTotalEvidence">--</div>
+        <div class="metric-footer" id="statEvidenceBreakdown">Across 6 artifact vectors</div>
+      </div>
+
+      <div class="metric-card accent-orange">
+        <div class="metric-header">
+          <span>SUSPICIOUS EVIDENCE</span>
+          <span class="metric-icon">&#9888;</span>
+        </div>
+        <div class="metric-value" id="statSuspiciousEvidence">--</div>
+        <div class="metric-footer">High &amp; Critical severity</div>
+      </div>
+
+      <div class="metric-card accent-amber">
+        <div class="metric-header">
+          <span>IDENTIFIED IOCs</span>
+          <span class="metric-icon">&#128279;</span>
+        </div>
+        <div class="metric-value" id="statTotalIocs">--</div>
+        <div class="metric-footer">IPs, Hashes, Domains, URLs</div>
+      </div>
+
+      <div class="metric-card accent-red">
+        <div class="metric-header">
+          <span>CRITICAL FINDINGS</span>
+          <span class="metric-icon">&#128680;</span>
+        </div>
+        <div class="metric-value" id="statCriticalFindings">--</div>
+        <div class="metric-footer">Risk score &ge; 80 / 100</div>
+      </div>
+    </section>
+
+    <!-- Investigation Progress & Risk Distribution Row -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      
+      <!-- Risk Distribution Visual Meter -->
+      <section class="data-panel" aria-label="Heuristic Risk Distribution">
+        <div class="panel-toolbar">
+          <span class="font-mono" style="font-weight: 700; color: var(--text-white);">RISK SEVERITY DISTRIBUTION</span>
+          <span class="badge badge-type font-mono">AUTOMATED HEURISTICS</span>
+        </div>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+          <!-- Progress Bar Segments -->
+          <div style="height: 14px; background: var(--bg-panel); border: 1px solid var(--border-subtle); display: flex; overflow: hidden;" id="riskDistributionBar">
+            <div id="riskBarCritical" style="background: #ff2a2a; width: 0%;" title="Critical"></div>
+            <div id="riskBarHigh" style="background: #ff6b35; width: 0%;" title="High"></div>
+            <div id="riskBarMedium" style="background: #f59e0b; width: 0%;" title="Medium"></div>
+            <div id="riskBarLow" style="background: #10b981; width: 0%;" title="Low"></div>
+          </div>
+
+          <!-- Legend Counters -->
+          <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center;" class="font-mono">
+            <div style="background: var(--bg-panel); border: 1px solid var(--border-subtle); padding: 8px;">
+              <div style="color: #ff2a2a; font-weight: 800; font-size: 1.1rem;" id="distCriticalCount">0</div>
+              <div style="font-size: 0.65rem; color: var(--text-muted);">CRITICAL</div>
+            </div>
+            <div style="background: var(--bg-panel); border: 1px solid var(--border-subtle); padding: 8px;">
+              <div style="color: #ff6b35; font-weight: 800; font-size: 1.1rem;" id="distHighCount">0</div>
+              <div style="font-size: 0.65rem; color: var(--text-muted);">HIGH</div>
+            </div>
+            <div style="background: var(--bg-panel); border: 1px solid var(--border-subtle); padding: 8px;">
+              <div style="color: #f59e0b; font-weight: 800; font-size: 1.1rem;" id="distMediumCount">0</div>
+              <div style="font-size: 0.65rem; color: var(--text-muted);">MEDIUM</div>
+            </div>
+            <div style="background: var(--bg-panel); border: 1px solid var(--border-subtle); padding: 8px;">
+              <div style="color: #10b981; font-weight: 800; font-size: 1.1rem;" id="distLowCount">0</div>
+              <div style="font-size: 0.65rem; color: var(--text-muted);">LOW</div>
+            </div>
+          </div>
+
+          <p style="font-size: 0.78rem; color: var(--text-secondary); line-height: 1.45;">
+            Scores dynamically calculated by the Transparent Risk Engine based on threat hashes, external C2 IPs, LOLBin usage, and parent-child process anomalies.
+          </p>
+        </div>
+      </section>
+
+      <!-- Investigation Pipeline Progress -->
+      <section class="data-panel" aria-label="Investigation Pipeline Status">
+        <div class="panel-toolbar">
+          <span class="font-mono" style="font-weight: 700; color: var(--text-white);">TRIAGE PIPELINE READINESS</span>
+          <span class="badge badge-critical font-mono">ACTIVE CASE</span>
+        </div>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 14px;" class="font-mono">
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+              <span>STAGE 1: EVIDENCE IDENTIFICATION</span>
+              <span style="color: #10b981;">100% COMPLETE</span>
+            </div>
+            <div style="height: 6px; background: var(--bg-panel);"><div style="width: 100%; height: 100%; background: #10b981;"></div></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+              <span>STAGE 2: BITSTREAM &amp; LOG ACQUISITION</span>
+              <span style="color: #10b981;">100% VERIFIED</span>
+            </div>
+            <div style="height: 6px; background: var(--bg-panel);"><div style="width: 100%; height: 100%; background: #10b981;"></div></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+              <span>STAGE 3: CLASSIFICATION &amp; EXTRACTION</span>
+              <span style="color: #ff6b35;">92% ANALYZED</span>
+            </div>
+            <div style="height: 6px; background: var(--bg-panel);"><div style="width: 92%; height: 100%; background: #ff6b35;"></div></div>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 4px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem;">
+              <span>STAGE 4: TIMELINE CORRELATION &amp; IOCs</span>
+              <span style="color: #ff2a2a;">88% CORRELATED</span>
+            </div>
+            <div style="height: 6px; background: var(--bg-panel);"><div style="width: 88%; height: 100%; background: #ff2a2a;"></div></div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Priority Evidence Watchlist -->
+    <section class="data-panel" aria-label="Priority Evidence Watchlist">
+      <div class="panel-toolbar">
+        <div>
+          <span class="font-mono" style="font-weight: 700; color: var(--text-white);">PRIORITY EVIDENCE WATCHLIST</span>
+          <span style="font-size: 0.72rem; color: var(--text-muted); margin-left: 8px;" class="font-mono">HIGH &amp; CRITICAL ITEMS REQUIRING IMMEDIATE TRIAGE</span>
+        </div>
+        <button type="button" class="table-action-btn font-mono" onclick="location.href='evidence.html'">VIEW ALL IN EXPLORER &rarr;</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="triage-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>TYPE</th>
+              <th>EVIDENCE NAME</th>
+              <th>SOURCE / LOCATION</th>
+              <th>TIMESTAMP</th>
+              <th>RISK SCORE</th>
+              <th>ACTION</th>
+            </tr>
+          </thead>
+          <tbody id="priorityEvidenceTableBody">
+            <!-- Dynamic Rows Generated by dashboard.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Recent Timeline Events & MITRE ATT&CK Matrix Preview -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+      
+      <!-- Recent Timeline Events -->
+      <section class="data-panel" aria-label="Recent Correlated Events">
+        <div class="panel-toolbar">
+          <span class="font-mono" style="font-weight: 700; color: var(--text-white);">RECENT TIMELINE EVENTS</span>
+          <button type="button" class="table-action-btn font-mono" onclick="location.href='timeline.html'">FULL TIMELINE &rarr;</button>
+        </div>
+        <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px;" id="dashboardTimelinePreview">
+          <!-- Dynamic Items Generated by dashboard.js -->
+        </div>
+      </section>
+
+      <!-- Key Findings & MITRE ATT&CK Coverage -->
+      <section class="data-panel" aria-label="MITRE ATT&CK Tactics Identified">
+        <div class="panel-toolbar">
+          <span class="font-mono" style="font-weight: 700; color: var(--text-white);">CONFIRMED ADVERSARY TTPs</span>
+          <span class="badge badge-mitre font-mono">MITRE ATT&CK</span>
+        </div>
+        <div style="padding: 18px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <span class="badge badge-mitre font-mono">T1566.002 Spearphishing Link</span>
+            <span class="badge badge-mitre font-mono">T1204.002 Malicious Execution</span>
+            <span class="badge badge-mitre font-mono">T1059.001 PowerShell</span>
+            <span class="badge badge-mitre font-mono">T1071.001 TLS C2 Beacon</span>
+            <span class="badge badge-mitre font-mono">T1053.005 Scheduled Task</span>
+            <span class="badge badge-mitre font-mono">T1003.001 LSASS Memory Dump</span>
+            <span class="badge badge-mitre font-mono">T1550.002 Pass the Hash</span>
+            <span class="badge badge-mitre font-mono">T1041 C2 Exfiltration</span>
+          </div>
+          <div style="background: var(--bg-panel); border: 1px solid var(--border-subtle); padding: 12px; font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5;">
+            <strong style="color: var(--text-white);">Threat Attribution Assessment:</strong> Activity matches Cobalt Strike beaconing pattern with living-off-the-land reconnaissance and Pass-the-Hash domain lateral movement targeting Primary Domain Controller.
+          </div>
+          <div style="display: flex; justify-content: flex-end;">
+            <button type="button" class="action-btn font-mono" onclick="location.href='graph.html'">OPEN RELATIONSHIP GRAPH &rarr;</button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

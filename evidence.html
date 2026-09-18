@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cyber Triage Tool - Forensic Evidence Explorer | SIH1744">
+  <meta name="theme-color" content="#08090c">
+  <title>Evidence Explorer | Cyber Triage Tool</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- Global Technical Header -->
+  <header class="app-header font-mono" role="banner">
+    <div class="nav-wrapper">
+      <a href="index.html" class="nav-brand" title="Return to Overview">
+        <span class="brand-badge">CT</span>
+        <div class="brand-text">
+          <span class="brand-title">CYBER TRIAGE TOOL</span>
+          <span class="brand-meta">SIH1744 &bull; SIH 2024</span>
+        </div>
+      </a>
+
+      <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
+
+      <ul class="nav-links" id="navLinksContainer">
+        <li><a href="index.html" class="nav-link">HOME</a></li>
+        <li><a href="dashboard.html" class="nav-link">DASHBOARD</a></li>
+        <li><a href="evidence.html" class="nav-link active">EVIDENCE</a></li>
+        <li><a href="ioc.html" class="nav-link">IOC ANALYSIS</a></li>
+        <li><a href="timeline.html" class="nav-link">TIMELINE</a></li>
+        <li><a href="graph.html" class="nav-link">GRAPH</a></li>
+        <li><a href="reports.html" class="nav-link">REPORTS</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div class="case-indicator">
+          <span class="case-pulse"></span>
+          <span>CASE #2024-TRIAGE-01</span>
+        </div>
+        <button type="button" class="btn-acquire-quick font-mono" id="openAcquireDemoBtn" title="Acquire new local evidence file">
+          <span>+ ACQUIRE EVIDENCE</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="app-container" style="margin-top: 24px;">
+    
+    <!-- Page Header -->
+    <section class="page-header" aria-label="Evidence Explorer Header">
+      <div class="header-left">
+        <span class="page-category font-mono">DIGITAL FORENSIC INGESTION</span>
+        <h1 class="page-title">Evidence Explorer</h1>
+        <p class="page-subtitle">
+          Dynamic triage catalog indexing files, processes, network streams, browser artifacts, and user security logs extracted from host <code class="font-mono" style="color: var(--color-accent-red);">WS-04</code>.
+        </p>
+      </div>
+      <div class="header-right font-mono">
+        <button type="button" class="action-btn" id="triggerAcquisitionBtn">+ ACQUIRE FILE DEMO</button>
+        <button type="button" class="table-action-btn" id="exportEvidenceCsvBtn">EXPORT CSV</button>
+      </div>
+    </section>
+
+    <!-- Evidence Data Panel -->
+    <section class="data-panel" aria-label="Dynamic Forensic Evidence Table">
+      
+      <!-- Toolbar: Search, Filters, Sort -->
+      <div class="panel-toolbar">
+        <div class="toolbar-search">
+          <span style="color: var(--text-muted); margin-right: 8px;" aria-hidden="true">&#128269;</span>
+          <input type="text" id="evidenceSearchInput" class="search-input" placeholder="SEARCH BY ID, NAME, PATH, SHA-256..." aria-label="Search evidence records">
+          <button type="button" id="clearSearchBtn" class="table-action-btn" style="border:none; padding:0 4px; display:none;">&times;</button>
+        </div>
+
+        <div class="toolbar-filters font-mono">
+          <!-- Type Filter -->
+          <label for="filterType" style="font-size: 0.68rem; color: var(--text-muted);">TYPE:</label>
+          <select id="filterType" class="custom-select" aria-label="Filter by evidence type">
+            <option value="ALL">ALL TYPES</option>
+            <option value="File">FILE</option>
+            <option value="Process">PROCESS</option>
+            <option value="Network">NETWORK</option>
+            <option value="Browser">BROWSER</option>
+            <option value="System">SYSTEM</option>
+            <option value="User">USER</option>
+          </select>
+
+          <!-- Risk Tier Filter -->
+          <label for="filterRisk" style="font-size: 0.68rem; color: var(--text-muted);">RISK:</label>
+          <select id="filterRisk" class="custom-select" aria-label="Filter by risk tier">
+            <option value="ALL">ALL TIERS</option>
+            <option value="CRITICAL">CRITICAL (&ge;80)</option>
+            <option value="HIGH">HIGH (60-79)</option>
+            <option value="MEDIUM">MEDIUM (30-59)</option>
+            <option value="LOW">LOW (0-29)</option>
+          </select>
+
+          <!-- Status Filter -->
+          <label for="filterStatus" style="font-size: 0.68rem; color: var(--text-muted);">STATUS:</label>
+          <select id="filterStatus" class="custom-select" aria-label="Filter by triage status">
+            <option value="ALL">ALL STATUSES</option>
+            <option value="Flagged">FLAGGED</option>
+            <option value="Analyzed">ANALYZED</option>
+          </select>
+
+          <!-- Sort Selector -->
+          <label for="sortSelector" style="font-size: 0.68rem; color: var(--text-muted);">SORT:</label>
+          <select id="sortSelector" class="custom-select" aria-label="Sort evidence records">
+            <option value="risk-desc">RISK: HIGHEST &darr;</option>
+            <option value="risk-asc">RISK: LOWEST &uarr;</option>
+            <option value="time-desc">TIME: NEWEST &darr;</option>
+            <option value="time-asc">TIME: OLDEST &uarr;</option>
+            <option value="id-asc">ID: ASCENDING</option>
+            <option value="name-asc">NAME: A-Z</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Dynamic Table Content -->
+      <div class="table-responsive">
+        <table class="triage-table" id="evidenceTable">
+          <thead>
+            <tr>
+              <th class="sortable font-mono" data-sort="id">ID &uarr;&darr;</th>
+              <th class="sortable font-mono" data-sort="type">TYPE</th>
+              <th class="sortable font-mono" data-sort="name">NAME &uarr;&darr;</th>
+              <th class="font-mono">SOURCE / LOCATION</th>
+              <th class="sortable font-mono" data-sort="time">TIMESTAMP &uarr;&darr;</th>
+              <th class="font-mono">STATUS</th>
+              <th class="sortable font-mono" data-sort="risk">RISK &uarr;&darr;</th>
+              <th class="font-mono">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="evidenceTableBody">
+            <!-- Dynamically populated by js/evidence.js -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Footer Info -->
+      <div class="panel-footer font-mono">
+        <span id="evidenceRecordCounter">SHOWING 42 OF 42 RECORDS</span>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <span style="color: var(--text-muted); font-size: 0.68rem;">CLICK ANY ROW FOR TRANSPARENT RISK BREAKDOWN</span>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/evidence.js"></script>
+</body>
+</html>

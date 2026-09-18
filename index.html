@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Cyber Triage Tool - Streamline Digital Forensic Investigation | SIH1744 Smart India Hackathon 2024">
+  <meta name="theme-color" content="#08090c">
+  <title>Cyber Triage Tool | SIH1744 Digital Forensic Investigation</title>
+
+  <!-- Preconnect to Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+  <!-- Global Application Navigation Bar -->
+  <header class="app-header font-mono" role="banner">
+    <div class="nav-wrapper">
+      <a href="index.html" class="nav-brand" title="Cyber Triage Overview">
+        <span class="brand-badge">CT</span>
+        <div class="brand-text">
+          <span class="brand-title">CYBER TRIAGE TOOL</span>
+          <span class="brand-meta">SIH1744 &bull; SIH 2024</span>
+        </div>
+      </a>
+
+      <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
+
+      <ul class="nav-links" id="navLinksContainer">
+        <li><a href="index.html" class="nav-link active" aria-current="page">HOME</a></li>
+        <li><a href="dashboard.html" class="nav-link">DASHBOARD</a></li>
+        <li><a href="evidence.html" class="nav-link">EVIDENCE</a></li>
+        <li><a href="ioc.html" class="nav-link">IOC ANALYSIS</a></li>
+        <li><a href="timeline.html" class="nav-link">TIMELINE</a></li>
+        <li><a href="graph.html" class="nav-link">GRAPH</a></li>
+        <li><a href="reports.html" class="nav-link">REPORTS</a></li>
+      </ul>
+
+      <div class="nav-actions">
+        <div class="case-indicator">
+          <span class="case-pulse"></span>
+          <span>CASE #2024-TRIAGE-01</span>
+        </div>
+        <button type="button" class="btn-acquire-quick font-mono" title="Acquire new forensic evidence file">
+          <span>+ ACQUIRE</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="screen-wrapper" style="margin-top: 18px;">
+    <!-- Top System Status / Terminal Ticker Bar -->
+    <div class="top-bar" role="region" aria-label="System status ticker">
+      <div class="terminal-status">
+        <span class="status-indicator"></span>
+        <span class="status-text font-mono">SYS_STATUS: READY // ENCRYPTION: ACTIVE // TRIAGE_PIPELINE: STANDBY</span>
+      </div>
+      <div class="keyboard-hint font-mono">
+        <span>PRESS <kbd class="kbd-badge">[1-6]</kbd> FOR STAGES &bull; <kbd class="kbd-badge">[P]</kbd> PRESENTATION</span>
+      </div>
+    </div>
+
+    <!-- Main Container Card (Reference Landing Hero) -->
+    <main class="triage-card" id="triageCard" role="main" aria-label="Cyber Triage Problem Statement Presentation">
+      
+      <!-- Top-Right Badge / Ribbon -->
+      <aside class="corner-badge" aria-label="Hackathon Edition and Track">
+        <div class="badge-edition font-mono">6TH 2024</div>
+        <div class="badge-track font-mono">SOFTWARE</div>
+      </aside>
+
+      <!-- Left Vertical Red Accent Line -->
+      <div class="card-left-accent" aria-hidden="true"></div>
+
+      <div class="card-inner">
+        <!-- Meta / Category Header -->
+        <section class="meta-section" aria-label="Project Meta Information">
+          <div class="category-tag font-mono">CYBERSECURITY / FORENSICS</div>
+          <div class="metadata-row font-mono">
+            <span class="meta-id">SIH1744</span>
+            <span class="meta-separator" aria-hidden="true">&bull;</span>
+            <span class="meta-edition">SIH 2024</span>
+            <button type="button" class="copy-id-btn" id="copyIdBtn" title="Copy Problem Statement ID: SIH1744" aria-label="Copy Problem Statement ID to clipboard">
+              <span class="copy-icon" aria-hidden="true">#</span>
+              <span class="copy-label font-mono">COPY ID</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- Main Heading -->
+        <section class="hero-section" aria-label="Problem Statement Title and Summary">
+          <h1 class="main-heading">
+            Creating a Cyber Triage Tool to<br class="heading-break">
+            Streamline Digital Forensic<br class="heading-break">
+            Investigation
+          </h1>
+          <p class="project-description">
+            Build an innovative digital-forensics and incident-response tool that helps investigators rapidly collect, organize and analyze digital evidence.
+          </p>
+
+          <!-- Quick Launch Button to Dashboard -->
+          <div style="display: flex; gap: 12px; align-items: center; margin-top: 6px; flex-wrap: wrap;">
+            <a href="dashboard.html" class="action-btn font-mono" style="background: var(--color-accent-red); color: var(--text-white); border-color: var(--color-accent-red); text-decoration: none; padding: 8px 18px; font-weight: 700;">
+              LAUNCH TRIAGE DASHBOARD &rarr;
+            </a>
+            <a href="evidence.html" class="action-btn font-mono" style="text-decoration: none; padding: 8px 14px;">
+              EXPLORE 40+ ARTIFACTS
+            </a>
+          </div>
+        </section>
+
+        <!-- Subtle Horizontal Divider -->
+        <hr class="subtle-divider" aria-hidden="true">
+
+        <!-- Process Flow Section -->
+        <section class="process-section" aria-label="Digital Forensics Pipeline Flow">
+          <div class="process-header-meta font-mono">
+            <span class="process-label">// CORE TRIAGE PIPELINE</span>
+            <span class="process-guide">HOVER OR CLICK STAGES &bull; [1-6] SHORTCUTS</span>
+          </div>
+
+          <div class="process-bar font-mono" id="processBar" role="tablist" aria-label="Triage Pipeline Stages">
+            <!-- Stage 1 -->
+            <div class="process-node">
+              <button type="button" class="process-step active" data-step="1" data-title="EVIDENCE" data-desc="Identify and tag digital media, volatile RAM dumps, disk images, network pcap captures, and raw persistent storage." data-artifacts="Raw Disk (.dd, .e01), Volatile Memory (.raw), PCAP, Syslog" role="tab" aria-selected="true" id="tab-step-1" aria-controls="processDetailPanel">
+                <span class="step-num">01</span>
+                <span class="step-text">EVIDENCE</span>
+              </button>
+              <span class="process-arrow" aria-hidden="true">&rarr;</span>
+            </div>
+
+            <!-- Stage 2 -->
+            <div class="process-node">
+              <button type="button" class="process-step" data-step="2" data-title="ACQUIRE" data-desc="Bit-stream forensic acquisition with hardware write-blockers and cryptographic SHA-256 / Blake3 hash verification ensuring strict chain of custody." data-artifacts="Cryptographic Hashes, Acquisition Logs, Write-blocked Media" role="tab" aria-selected="false" id="tab-step-2" aria-controls="processDetailPanel">
+                <span class="step-num">02</span>
+                <span class="step-text">ACQUIRE</span>
+              </button>
+              <span class="process-arrow" aria-hidden="true">&rarr;</span>
+            </div>
+
+            <!-- Stage 3 -->
+            <div class="process-node">
+              <button type="button" class="process-step" data-step="3" data-title="CLASSIFY" data-desc="Heuristic triage & file-signature carving to categorize artifacts by OS origin, severity priority, and evidence format." data-artifacts="File Signatures (MIME), Partition Tables, System Artifact Types" role="tab" aria-selected="false" id="tab-step-3" aria-controls="processDetailPanel">
+                <span class="step-num">03</span>
+                <span class="step-text">CLASSIFY</span>
+              </button>
+              <span class="process-arrow" aria-hidden="true">&rarr;</span>
+            </div>
+
+            <!-- Stage 4 -->
+            <div class="process-node">
+              <button type="button" class="process-step" data-step="4" data-title="EXTRACT" data-desc="Automated extraction of forensic targets: Windows Event Logs (EVTX), Registry hives, browser histories, Prefetch, and Shimcache." data-artifacts="EVTX Records, Amcache, LNK Files, MFT Entries, Shellbags" role="tab" aria-selected="false" id="tab-step-4" aria-controls="processDetailPanel">
+                <span class="step-num">04</span>
+                <span class="step-text">EXTRACT</span>
+              </button>
+              <span class="process-arrow" aria-hidden="true">&rarr;</span>
+            </div>
+
+            <!-- Stage 5 -->
+            <div class="process-node">
+              <button type="button" class="process-step" data-step="5" data-title="CORRELATE" data-desc="Cross-source timestamp normalization, super-timeline reconstruction, and automated indicator of compromise (IoC) mapping." data-artifacts="Unified Super-timeline, MITRE ATT&CK Matrix, IoC Feeds" role="tab" aria-selected="false" id="tab-step-5" aria-controls="processDetailPanel">
+                <span class="step-num">05</span>
+                <span class="step-text">CORRELATE</span>
+              </button>
+              <span class="process-arrow" aria-hidden="true">&rarr;</span>
+            </div>
+
+            <!-- Stage 6 -->
+            <div class="process-node">
+              <button type="button" class="process-step" data-step="6" data-title="INVESTIGATE" data-desc="Interactive root-cause hypothesis validation, anomaly scoring, forensic evidence graph, and court-admissible reporting." data-artifacts="Executive Triage Report, Threat Attribution, Timeline Graph" role="tab" aria-selected="false" id="tab-step-6" aria-controls="processDetailPanel">
+                <span class="step-num">06</span>
+                <span class="step-text">INVESTIGATE</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Process Detail Box -->
+          <div class="process-detail-panel font-mono" id="processDetailPanel" role="tabpanel" aria-labelledby="tab-step-1" aria-live="polite">
+            <div class="detail-header">
+              <span class="detail-badge" id="detailStepBadge">STAGE 01</span>
+              <span class="detail-title" id="detailTitle">EVIDENCE</span>
+            </div>
+            <p class="detail-desc" id="detailDesc">
+              Identify and tag digital media, volatile RAM dumps, disk images, network pcap captures, and raw persistent storage.
+            </p>
+            <div class="detail-artifacts">
+              <span class="detail-artifact-label">REPRESENTATIVE ARTIFACTS:</span>
+              <span class="detail-artifact-content" id="detailArtifacts">Raw Disk (.dd, .e01), Volatile Memory (.raw), PCAP, Syslog</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Subtle Horizontal Divider -->
+        <hr class="subtle-divider" aria-hidden="true">
+
+        <!-- "WHY IT'S HARD" Section -->
+        <section class="challenge-section" aria-labelledby="challengeHeading">
+          <h2 class="section-heading font-mono" id="challengeHeading">
+            <span class="heading-prefix">//</span> WHY IT'S HARD
+          </h2>
+
+          <ul class="challenge-list" role="list">
+            <li class="challenge-item" tabindex="0">
+              <span class="bullet-marker font-mono" aria-hidden="true">[01]</span>
+              <div class="challenge-content">
+                <span class="challenge-title">Digital evidence collection</span>
+                <span class="challenge-subtext">Volatile memory decay, encrypted storage volumes, distributed multi-cloud endpoints, and strict forensic chain-of-custody compliance.</span>
+              </div>
+            </li>
+            <li class="challenge-item" tabindex="0">
+              <span class="bullet-marker font-mono" aria-hidden="true">[02]</span>
+              <div class="challenge-content">
+                <span class="challenge-title">Evidence classification and extraction</span>
+                <span class="challenge-subtext">Petabytes of noisy unindexed data, proprietary forensic container structures, anti-forensics wiping techniques, and obfuscated artifacts.</span>
+              </div>
+            </li>
+            <li class="challenge-item" tabindex="0">
+              <span class="bullet-marker font-mono" aria-hidden="true">[03]</span>
+              <div class="challenge-content">
+                <span class="challenge-title">Indicator-of-compromise discovery</span>
+                <span class="challenge-subtext">Living-off-the-land binaries (LOLBins), fileless malware in memory, stealthy lateral movements, and zero-day threat patterns.</span>
+              </div>
+            </li>
+            <li class="challenge-item" tabindex="0">
+              <span class="bullet-marker font-mono" aria-hidden="true">[04]</span>
+              <div class="challenge-content">
+                <span class="challenge-title">Timeline and correlation analysis</span>
+                <span class="challenge-subtext">Skewed hardware clock drifts, out-of-order log streams, multi-zone synchronization, and assembling millions of raw timestamps into a unified narrative.</span>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- Footer / Operational Details -->
+        <footer class="card-footer font-mono">
+          <div class="footer-left">
+            <span class="footer-tag">TRIAGE_ENGINE</span> &bull; 
+            <span class="footer-version">v2.4.0-SIH_EDITION</span>
+          </div>
+          <div class="footer-right">
+            <a href="dashboard.html" class="action-btn" style="background: var(--color-accent-red); color: var(--text-white); border-color: var(--color-accent-red); text-decoration: none;">
+              <span>ENTER APPLICATION &rarr;</span>
+            </a>
+            <button type="button" class="action-btn" id="presentationModeBtn" title="Toggle Fullscreen Presentation View">
+              <span class="btn-indicator"></span>
+              <span>PRESENTATION VIEW</span>
+            </button>
+          </div>
+        </footer>
+
+      </div>
+    </main>
+
+    <!-- Notification Toast for Copy/Actions -->
+    <div class="toast-notification font-mono" id="toastNotification" role="status" aria-live="polite">
+      COPIED TO CLIPBOARD
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>
