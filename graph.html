@@ -4,135 +4,190 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Cyber Triage Tool - Investigation Relationship Graph | SIH1744">
-  <meta name="theme-color" content="#08090c">
+  <meta name="theme-color" content="#090b0e">
   <title>Investigation Graph | Cyber Triage Tool</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 
-  <!-- Global Technical Header -->
-  <header class="app-header font-mono" role="banner">
-    <div class="nav-wrapper">
-      <a href="index.html" class="nav-brand" title="Return to Overview">
-        <span class="brand-badge">CT</span>
-        <div class="brand-text">
-          <span class="brand-title">CYBER TRIAGE TOOL</span>
-          <span class="brand-meta">SIH1744 &bull; SIH 2024</span>
-        </div>
-      </a>
-
-      <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
-
-      <ul class="nav-links" id="navLinksContainer">
-        <li><a href="index.html" class="nav-link">HOME</a></li>
-        <li><a href="dashboard.html" class="nav-link">DASHBOARD</a></li>
-        <li><a href="evidence.html" class="nav-link">EVIDENCE</a></li>
-        <li><a href="ioc.html" class="nav-link">IOC ANALYSIS</a></li>
-        <li><a href="timeline.html" class="nav-link">TIMELINE</a></li>
-        <li><a href="graph.html" class="nav-link active">GRAPH</a></li>
-        <li><a href="reports.html" class="nav-link">REPORTS</a></li>
-      </ul>
-
-      <div class="nav-actions">
-        <div class="case-indicator">
-          <span class="case-pulse"></span>
-          <span>CASE #2024-TRIAGE-01</span>
-        </div>
-        <button type="button" class="btn-acquire-quick font-mono" title="Acquire new forensic evidence file">
-          <span>+ ACQUIRE</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Container -->
-  <main class="app-container" style="margin-top: 24px;">
+  <div class="app-shell">
     
-    <!-- Page Header -->
-    <section class="page-header" aria-label="Investigation Graph Header">
-      <div class="header-left">
-        <span class="page-category font-mono">FORENSIC ENTITY RELATIONSHIPS</span>
-        <h1 class="page-title">Investigation Graph</h1>
-        <p class="page-subtitle">
-          Interactive relationship topology mapping attack vectors from user workstation to weaponized URLs, droppers, process trees, and C2 exfiltration streams.
-        </p>
+    <!-- Global Top Bar -->
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
+        <a href="index.html" class="topbar-brand" title="Return to Overview">
+          <span class="brand-badge">CT</span>
+          <span>CYBER TRIAGE</span>
+        </a>
+        <div class="topbar-divider"></div>
+        <div class="topbar-case font-mono">
+          <span class="case-id">CASE: INC-2024-0918</span>
+          <span class="case-title">&bull; Windows Endpoint Triage</span>
+        </div>
+        <span class="simulation-pill">SIMULATION DATA</span>
       </div>
-      <div class="header-right font-mono">
-        <button type="button" class="table-action-btn" id="resetZoomBtn">RESET CAMERA</button>
-        <button type="button" class="action-btn" id="realignGraphBtn">AUTO-LAYOUT</button>
+      <div class="topbar-right">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>System Ready</span>
+        </div>
+        <button type="button" class="topbar-btn-ingest" id="quickIngestBtn">+ Ingest Evidence</button>
+        <div class="topbar-user">Analyst: DFIR-01</div>
       </div>
-    </section>
+    </header>
 
-    <!-- Graph Viewport & Canvas -->
-    <section class="graph-viewport" id="graphViewport" aria-label="Interactive Forensic Topology Graph">
+    <!-- App Body: Left Sidebar + Main Viewport -->
+    <div class="app-body">
       
-      <!-- Graph Canvas / SVG -->
-      <svg class="graph-svg" id="graphSvg" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="28" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#ff2a2a" />
-          </marker>
-          <marker id="arrowhead-dim" markerWidth="10" markerHeight="7" refX="28" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255, 255, 255, 0.2)" />
-          </marker>
-        </defs>
-        <g id="graphTransformGroup">
-          <g id="graphLinksGroup"></g>
-          <g id="graphNodesGroup"></g>
-        </g>
-      </svg>
-
-      <!-- Graph Legend -->
-      <div class="graph-legend font-mono" aria-label="Graph Legend">
-        <div style="font-weight: 700; color: var(--text-white); margin-bottom: 4px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 4px;">ENTITY TYPES</div>
-        <div class="legend-item"><span class="legend-color" style="background: #3b82f6;"></span> User Accounts</div>
-        <div class="legend-item"><span class="legend-color" style="background: #a855f7;"></span> Processes &amp; Shells</div>
-        <div class="legend-item"><span class="legend-color" style="background: #eab308;"></span> Files &amp; Droppers</div>
-        <div class="legend-item"><span class="legend-color" style="background: #ef4444;"></span> Network &amp; C2 IPs</div>
-        <div class="legend-item"><span class="legend-color" style="background: #f97316;"></span> Weaponized Domains</div>
-        <div class="legend-item"><span class="legend-color" style="background: #06b6d4;"></span> System Persistence</div>
-      </div>
-
-      <!-- Zoom / Pan Overlay Controls -->
-      <div class="graph-controls">
-        <button type="button" class="graph-btn" id="zoomInBtn" title="Zoom In">+</button>
-        <button type="button" class="graph-btn" id="zoomOutBtn" title="Zoom Out">&minus;</button>
-        <button type="button" class="graph-btn" id="centerGraphBtn" title="Fit to Screen">&#9678; FIT</button>
-      </div>
-
-      <!-- Node Inspector Sidebar (Updates when a node is clicked) -->
-      <aside class="graph-inspector font-mono" id="nodeInspector" aria-label="Node Inspector" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px;">
-          <span class="badge badge-type" id="inspectNodeType">PROCESS</span>
-          <button type="button" class="modal-close-btn" id="closeInspectorBtn" style="padding: 1px 6px;">&times;</button>
-        </div>
+      <!-- Minimal Left Sidebar -->
+      <aside class="app-sidebar font-mono" aria-label="Investigation Navigation">
         <div>
-          <div style="font-weight: 800; color: var(--text-white); font-size: 0.95rem;" id="inspectNodeTitle">powershell.exe</div>
-          <div style="color: var(--text-secondary); font-family: var(--font-sans); font-size: 0.8rem; margin-top: 4px;" id="inspectNodeDesc">
-            Spawned hidden C2 beaconing process.
-          </div>
+          <div class="sidebar-section-title">INVESTIGATION</div>
+          <ul class="sidebar-nav">
+            <li>
+              <a href="dashboard.html" class="sidebar-link" data-page="dashboard">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Overview
+              </a>
+            </li>
+            <li>
+              <a href="evidence.html" class="sidebar-link" data-page="evidence">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                Evidence
+              </a>
+            </li>
+            <li>
+              <a href="ioc.html" class="sidebar-link" data-page="ioc">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                IOCs
+              </a>
+            </li>
+            <li>
+              <a href="timeline.html" class="sidebar-link" data-page="timeline">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Timeline
+              </a>
+            </li>
+            <li>
+              <a href="graph.html" class="sidebar-link active" data-page="graph">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                Investigation
+              </a>
+            </li>
+            <li>
+              <a href="reports.html" class="sidebar-link" data-page="reports">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h2"></path><rect x="8" y="10" width="12" height="12" rx="1"></rect></svg>
+                Reports
+              </a>
+            </li>
+          </ul>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); padding: 6px 8px; border: 1px solid var(--border-subtle);">
-          <span style="color: var(--text-muted); font-size: 0.68rem;">THREAT LEVEL:</span>
-          <span class="badge badge-critical" id="inspectNodeRisk">CRITICAL</span>
-        </div>
-        <div style="display: flex; flex-direction: column; gap: 4px;">
-          <span style="color: var(--text-muted); font-size: 0.68rem;">CONNECTED ENTITIES:</span>
-          <div id="inspectNodeConnections" style="display: flex; flex-direction: column; gap: 4px;"></div>
+        <div class="sidebar-footer">
+          <div class="sidebar-divider"></div>
+          <a href="index.html" class="sidebar-link" title="Return to Landing Page">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            Home Landing
+          </a>
         </div>
       </aside>
 
-    </section>
+      <!-- Main Content Viewport -->
+      <main class="app-main" role="main">
+        
+        <!-- Page Header -->
+        <section class="page-header" aria-label="Investigation Graph Header">
+          <div class="page-header-text">
+            <span class="page-category-label">CASE INC-2024-0918 &bull; FORENSIC ENTITY TOPOLOGY</span>
+            <h1 class="page-title">Investigation Graph</h1>
+            <p class="page-description">
+              Interactive relationship topology mapping attack vectors from user workstation to weaponized URLs, droppers, process trees, and C2 exfiltration streams. Click any node to inspect connected entities.
+            </p>
+          </div>
+          <div class="page-actions">
+            <button type="button" class="btn-secondary" id="resetZoomBtn">Reset Camera</button>
+            <button type="button" class="btn-primary" id="realignGraphBtn">Auto-Layout</button>
+          </div>
+        </section>
 
-  </main>
+        <!-- Graph Viewport & Canvas -->
+        <section class="graph-viewport" id="graphViewport" aria-label="Interactive Forensic Topology Graph">
+          
+          <!-- Graph Canvas / SVG -->
+          <svg class="graph-svg" id="graphSvg" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="28" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#ff2a2a" />
+              </marker>
+              <marker id="arrowhead-dim" markerWidth="10" markerHeight="7" refX="28" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255, 255, 255, 0.15)" />
+              </marker>
+            </defs>
+            <g id="graphTransformGroup">
+              <g id="graphLinksGroup"></g>
+              <g id="graphNodesGroup"></g>
+            </g>
+          </svg>
 
+          <!-- Graph Legend -->
+          <div class="graph-legend font-mono" aria-label="Graph Legend">
+            <div style="font-weight: 700; color: var(--text-white); margin-bottom: 4px; border-bottom: 1px solid var(--border-subtle); padding-bottom: 4px;">ENTITY TYPES</div>
+            <div class="legend-item"><span class="legend-color" style="background: #3b82f6;"></span> User Accounts</div>
+            <div class="legend-item"><span class="legend-color" style="background: #a855f7;"></span> Processes &amp; Shells</div>
+            <div class="legend-item"><span class="legend-color" style="background: #eab308;"></span> Files &amp; Droppers</div>
+            <div class="legend-item"><span class="legend-color" style="background: #ef4444;"></span> Network &amp; C2 IPs</div>
+            <div class="legend-item"><span class="legend-color" style="background: #f97316;"></span> Weaponized Domains</div>
+            <div class="legend-item"><span class="legend-color" style="background: #06b6d4;"></span> System Persistence</div>
+          </div>
+
+          <!-- Zoom / Pan Overlay Controls -->
+          <div class="graph-controls font-mono">
+            <button type="button" class="graph-btn" id="zoomInBtn" title="Zoom In">+</button>
+            <button type="button" class="graph-btn" id="zoomOutBtn" title="Zoom Out">&minus;</button>
+            <button type="button" class="graph-btn" id="centerGraphBtn" title="Fit to Screen" style="font-size: 0.68rem;">FIT</button>
+          </div>
+
+          <!-- Node Inspector Overlay -->
+          <aside class="graph-inspector font-mono" id="nodeInspector" aria-label="Node Inspector" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 6px;">
+              <span class="badge badge-type" id="inspectNodeType">PROCESS</span>
+              <button type="button" class="modal-close-btn" id="closeInspectorBtn" style="padding: 1px 6px;">&times;</button>
+            </div>
+            <div>
+              <div style="font-weight: 800; color: var(--text-white); font-size: 0.95rem;" id="inspectNodeTitle">powershell.exe</div>
+              <div style="color: var(--text-secondary); font-family: var(--font-sans); font-size: 0.78rem; margin-top: 4px; line-height: 1.4;" id="inspectNodeDesc">
+                Spawned hidden C2 beaconing process.
+              </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; background: var(--bg-panel); padding: 6px 8px; border: 1px solid var(--border-subtle); border-radius: 3px;">
+              <span style="color: var(--text-muted); font-size: 0.68rem;">THREAT LEVEL:</span>
+              <span class="badge badge-critical" id="inspectNodeRisk">CRITICAL</span>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <span style="color: var(--text-muted); font-size: 0.68rem;">CONNECTED ENTITIES:</span>
+              <div id="inspectNodeConnections" style="display: flex; flex-direction: column; gap: 4px;"></div>
+            </div>
+            <div style="margin-top: 6px;">
+              <button type="button" class="btn-primary" id="inspectEvidenceBtn" style="width: 100%; justify-content: center;">Inspect Evidence Artifact &rarr;</button>
+            </div>
+          </aside>
+
+        </section>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <script src="js/api.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
   <script src="js/graph.js"></script>

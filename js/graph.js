@@ -38,9 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'System': '#06b6d4'
   };
 
-  const graphData = window.CyberTriageStore.getGraphData();
-  const nodes = graphData.nodes;
-  const links = graphData.links;
+  let nodes = [];
+  let links = [];
 
   // Viewport transformation state
   let panX = 50;
@@ -286,6 +285,17 @@ document.addEventListener('DOMContentLoaded', () => {
       connGroup.appendChild(btn);
     });
 
+    // Inspect Evidence button in inspector
+    const inspectEvBtn = document.getElementById('inspectEvidenceBtn');
+    if (inspectEvBtn) {
+      inspectEvBtn.onclick = () => {
+        const evId = node.evidence_id || node.related_evidence_id || (node.id.startsWith('file_') ? 'EVD-1002' : (node.id.startsWith('proc_') ? 'EVD-1004' : (node.id.startsWith('dom_') ? 'EVD-1001' : (node.id.startsWith('ip_') ? 'EVD-1005' : 'EVD-1001'))));
+        if (window.openEvidenceDrawer) {
+          window.openEvidenceDrawer(evId);
+        }
+      };
+    }
+
     inspector.style.display = 'flex';
   }
 
@@ -381,7 +391,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Initial draw
-  updateTransform();
-  renderGraph();
+  // Initial data fetch and draw
+  async function loadGraphData() {
+    let data = null;
+    if (window.CyberTriageAPI) {
+      try {
+        data = await window.CyberTriageAPI.getGraph(1);
+      } catch (e) {
+        console.warn('[graph.js] API fetch failed, falling back to local store:', e);
+      }
+    }
+    if (!data && window.CyberTriageStore) {
+      data = window.CyberTriageStore.getGraphData();
+    }
+    if (data) {
+      nodes = data.nodes || [];
+      links = data.links || data.edges || [];
+    }
+    initPositions();
+    updateTransform();
+    renderGraph();
+  }
+
+  loadGraphData();
 });

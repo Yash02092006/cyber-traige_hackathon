@@ -4,112 +4,163 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Cyber Triage Tool - Correlated Attack Timeline | SIH1744">
-  <meta name="theme-color" content="#08090c">
+  <meta name="theme-color" content="#090b0e">
   <title>Attack Timeline | Cyber Triage Tool</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 
-  <!-- Global Technical Header -->
-  <header class="app-header font-mono" role="banner">
-    <div class="nav-wrapper">
-      <a href="index.html" class="nav-brand" title="Return to Overview">
-        <span class="brand-badge">CT</span>
-        <div class="brand-text">
-          <span class="brand-title">CYBER TRIAGE TOOL</span>
-          <span class="brand-meta">SIH1744 &bull; SIH 2024</span>
-        </div>
-      </a>
-
-      <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
-
-      <ul class="nav-links" id="navLinksContainer">
-        <li><a href="index.html" class="nav-link">HOME</a></li>
-        <li><a href="dashboard.html" class="nav-link">DASHBOARD</a></li>
-        <li><a href="evidence.html" class="nav-link">EVIDENCE</a></li>
-        <li><a href="ioc.html" class="nav-link">IOC ANALYSIS</a></li>
-        <li><a href="timeline.html" class="nav-link active">TIMELINE</a></li>
-        <li><a href="graph.html" class="nav-link">GRAPH</a></li>
-        <li><a href="reports.html" class="nav-link">REPORTS</a></li>
-      </ul>
-
-      <div class="nav-actions">
-        <div class="case-indicator">
-          <span class="case-pulse"></span>
-          <span>CASE #2024-TRIAGE-01</span>
-        </div>
-        <button type="button" class="btn-acquire-quick font-mono" title="Acquire new forensic evidence file">
-          <span>+ ACQUIRE</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Container -->
-  <main class="app-container" style="margin-top: 24px;">
+  <div class="app-shell">
     
-    <!-- Page Header -->
-    <section class="page-header" aria-label="Timeline Header">
-      <div class="header-left">
-        <span class="page-category font-mono">CHRONOLOGICAL EVENT NORMALIZATION</span>
-        <h1 class="page-title">Correlated Attack Timeline</h1>
-        <p class="page-subtitle">
-          Super-timeline reconstructing the adversary kill chain from initial user logon to credential harvesting, lateral movement, and data exfiltration.
-        </p>
-      </div>
-      <div class="header-right font-mono">
-        <button type="button" class="action-btn" id="exportTimelineJsonBtn">EXPORT JSON TIMELINE</button>
-      </div>
-    </section>
-
-    <!-- Toolbar: Severity & Type Filters -->
-    <section class="data-panel" aria-label="Timeline Filters">
-      <div class="panel-toolbar font-mono">
-        <div class="toolbar-search">
-          <span style="color: var(--text-muted); margin-right: 8px;">&#128269;</span>
-          <input type="text" id="timelineSearchInput" class="search-input" placeholder="SEARCH TIMELINE EVENTS, MITRE TAGS, USERS...">
+    <!-- Global Top Bar -->
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
+        <a href="index.html" class="topbar-brand" title="Return to Overview">
+          <span class="brand-badge">CT</span>
+          <span>CYBER TRIAGE</span>
+        </a>
+        <div class="topbar-divider"></div>
+        <div class="topbar-case font-mono">
+          <span class="case-id">CASE: INC-2024-0918</span>
+          <span class="case-title">&bull; Windows Endpoint Triage</span>
         </div>
-
-        <div class="toolbar-filters">
-          <!-- Severity Filter -->
-          <label for="timelineSeverityFilter" style="font-size: 0.68rem; color: var(--text-muted);">SEVERITY:</label>
-          <select id="timelineSeverityFilter" class="custom-select">
-            <option value="ALL">ALL SEVERITIES</option>
-            <option value="CRITICAL">CRITICAL</option>
-            <option value="HIGH">HIGH</option>
-            <option value="MEDIUM">MEDIUM</option>
-            <option value="LOW">LOW</option>
-          </select>
-
-          <!-- Type Filter -->
-          <label for="timelineTypeFilter" style="font-size: 0.68rem; color: var(--text-muted);">CATEGORY:</label>
-          <select id="timelineTypeFilter" class="custom-select">
-            <option value="ALL">ALL CATEGORIES</option>
-            <option value="Authentication">AUTHENTICATION</option>
-            <option value="Web">WEB / DOWNLOAD</option>
-            <option value="File">FILE ARTIFACTS</option>
-            <option value="Execution">PROCESS EXECUTION</option>
-            <option value="Network">NETWORK &amp; C2</option>
-            <option value="System">SYSTEM &amp; SERVICES</option>
-          </select>
-        </div>
+        <span class="simulation-pill">SIMULATION DATA</span>
       </div>
-    </section>
+      <div class="topbar-right">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>System Ready</span>
+        </div>
+        <button type="button" class="topbar-btn-ingest" id="quickIngestBtn">+ Ingest Evidence</button>
+        <div class="topbar-user">Analyst: DFIR-01</div>
+      </div>
+    </header>
 
-    <!-- Interactive Chronological Stream -->
-    <section class="timeline-stream font-mono" id="timelineStreamContainer" aria-label="Chronological Events Stream">
-      <!-- Injected dynamically by js/timeline.js -->
-    </section>
+    <!-- App Body: Left Sidebar + Main Viewport -->
+    <div class="app-body">
+      
+      <!-- Minimal Left Sidebar -->
+      <aside class="app-sidebar font-mono" aria-label="Investigation Navigation">
+        <div>
+          <div class="sidebar-section-title">INVESTIGATION</div>
+          <ul class="sidebar-nav">
+            <li>
+              <a href="dashboard.html" class="sidebar-link" data-page="dashboard">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Overview
+              </a>
+            </li>
+            <li>
+              <a href="evidence.html" class="sidebar-link" data-page="evidence">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                Evidence
+              </a>
+            </li>
+            <li>
+              <a href="ioc.html" class="sidebar-link" data-page="ioc">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                IOCs
+              </a>
+            </li>
+            <li>
+              <a href="timeline.html" class="sidebar-link active" data-page="timeline">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Timeline
+              </a>
+            </li>
+            <li>
+              <a href="graph.html" class="sidebar-link" data-page="graph">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                Investigation
+              </a>
+            </li>
+            <li>
+              <a href="reports.html" class="sidebar-link" data-page="reports">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h2"></path><rect x="8" y="10" width="12" height="12" rx="1"></rect></svg>
+                Reports
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div class="sidebar-footer">
+          <div class="sidebar-divider"></div>
+          <a href="index.html" class="sidebar-link" title="Return to Landing Page">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            Home Landing
+          </a>
+        </div>
+      </aside>
 
-  </main>
+      <!-- Main Content Viewport -->
+      <main class="app-main" role="main">
+        
+        <!-- Page Header -->
+        <section class="page-header" aria-label="Attack Timeline Header">
+          <div class="page-header-text">
+            <span class="page-category-label">CASE INC-2024-0918 &bull; CHRONOLOGICAL NORMALIZATION</span>
+            <h1 class="page-title">Correlated Attack Timeline</h1>
+            <p class="page-description">
+              Super-timeline reconstructing adversary activity from spearphishing initial access to credential dumping, lateral movement, and data staging. Click any event to inspect correlated artifacts in the right drawer.
+            </p>
+          </div>
+          <div class="page-actions">
+            <button type="button" class="btn-secondary" id="exportTimelineJsonBtn">Export JSON</button>
+          </div>
+        </section>
 
+        <!-- Filter Toolbar -->
+        <section class="toolbar-container font-mono" aria-label="Timeline Filters Toolbar">
+          <div class="toolbar-left">
+            <input type="text" id="timelineSearchInput" class="search-input" placeholder="Search events, commands, users, MITRE...">
+
+            <!-- Severity Filter -->
+            <select id="timelineSeverityFilter" class="filter-select" aria-label="Filter by Severity">
+              <option value="ALL">ALL SEVERITIES</option>
+              <option value="CRITICAL">CRITICAL</option>
+              <option value="HIGH">HIGH</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="LOW">LOW</option>
+            </select>
+
+            <!-- Type Filter -->
+            <select id="timelineTypeFilter" class="filter-select" aria-label="Filter by Category">
+              <option value="ALL">ALL CATEGORIES</option>
+              <option value="Authentication">AUTHENTICATION</option>
+              <option value="Web">WEB &amp; DOWNLOAD</option>
+              <option value="File">FILE ARTIFACTS</option>
+              <option value="Execution">PROCESS EXECUTION</option>
+              <option value="Network">NETWORK &amp; C2</option>
+              <option value="System">SYSTEM &amp; PERSISTENCE</option>
+            </select>
+          </div>
+
+          <div class="toolbar-right">
+            <span id="timelineCounter" style="font-size: 0.68rem; color: var(--text-muted); white-space: nowrap;">
+              CHRONOLOGICAL EVENTS
+            </span>
+          </div>
+        </section>
+
+        <!-- Scannable Timeline Stream -->
+        <section class="timeline-vertical-stream font-mono" id="timelineStreamContainer" aria-label="Timeline Events Stream">
+          <!-- Dynamically populated by js/timeline.js -->
+        </section>
+
+      </main>
+
+    </div>
+
+  </div>
+
+  <script src="js/api.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
   <script src="js/timeline.js"></script>

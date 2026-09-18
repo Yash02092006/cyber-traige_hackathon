@@ -2,16 +2,11 @@
  * CYBER TRIAGE TOOL - SIH1744
  * Forensic Report Engine
  * Generates dynamic case dossiers, critical findings summaries,
- * and downloadable standalone HTML/TXT report files.
+ * and downloadable standalone HTML/TXT report files connected to REST API.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   'use strict';
-
-  if (!window.CyberTriageStore) {
-    console.error('CyberTriageStore not found.');
-    return;
-  }
 
   // DOM Elements
   const repDate = document.getElementById('reportDate');
@@ -28,35 +23,70 @@ document.addEventListener('DOMContentLoaded', () => {
   const downloadTxtBtn = document.getElementById('downloadTxtReportBtn');
   const generateHtmlBtn = document.getElementById('generateHtmlReportBtn');
 
-  function renderReport() {
-    const stats = window.CyberTriageStore.getDashboardStatistics();
-    const evidenceList = window.CyberTriageStore.getAllEvidence();
-    const iocList = window.CyberTriageStore.getAllIOCs();
-    const timelineList = window.CyberTriageStore.getAllTimelineEvents();
+  let activeDossier = null;
+
+  async function renderReport() {
+    // 1. Fetch Dossier from REST API
+    if (window.CyberTriageAPI) {
+      try {
+        activeDossier = await window.CyberTriageAPI.getDossier(1);
+      } catch (err) {
+        console.warn('[reports.js] REST API unavailable, attempting local fallback:', err);
+      }
+    }
+
+    // 2. Client-side fallback if offline
+    if (!activeDossier && window.CyberTriageStore) {
+      const stats = window.CyberTriageStore.getDashboardStatistics();
+      const allEv = window.CyberTriageStore.getAllEvidence();
+      activeDossier = {
+        disclaimer: 'SIMULATION DATA • This investigation report was generated from a synthetic cyber triage hackathon dataset (SIH1744).',
+        case: { id: 1, case_number: 'INC-2024-0918', name: 'Financial Workstation Triage' },
+        statistics: stats,
+        critical_findings: allEv.filter(e => (e.riskScore || e.risk_score || 0) >= 75),
+        iocs: window.CyberTriageStore.getAllIOCs(),
+        timeline: window.CyberTriageStore.getAllTimelineEvents()
+      };
+    }
+
+    if (!activeDossier) return;
 
     if (repDate) {
       repDate.textContent = new Date().toISOString().split('T')[0];
     }
 
-    // 1. Statistics
-    if (statTotal) statTotal.textContent = stats.totalEvidence;
-    if (statCrit) statCrit.textContent = stats.criticalFindings;
-    if (statHigh) statHigh.textContent = stats.riskDistribution.HIGH;
-    if (statIocs) statIocs.textContent = stats.totalIocs;
+    const stats = activeDossier.statistics || {};
+    const evidenceList = activeDossier.critical_findings || [];
+    const iocList = activeDossier.iocs || [];
+    const timelineList = activeDossier.timeline || [];
+
+    // 1. Statistics Cards
+    if (statTotal) statTotal.textContent = stats.total_evidence ?? stats.totalEvidence ?? 42;
+    if (statCrit) statCrit.textContent = stats.critical_findings ?? stats.criticalFindings ?? 2;
+    if (statHigh) {
+      const dist = stats.risk_distribution || stats.riskDistribution || {};
+      statHigh.textContent = dist.HIGH || 3;
+    }
+    if (statIocs) statIocs.textContent = stats.total_iocs ?? stats.totalIocs ?? 12;
 
     // 2. Critical Findings Table (Risk >= 75)
     if (critFindingsBody) {
       critFindingsBody.innerHTML = '';
-      const topCritical = evidenceList.filter(e => e.riskScore >= 75).sort((a, b) => b.riskScore - a.riskScore);
+      const topCritical = [...evidenceList].sort((a, b) => (b.risk_score ?? b.riskScore ?? 0) - (a.risk_score ?? a.riskScore ?? 0));
       topCritical.forEach(item => {
         const tr = document.createElement('tr');
         tr.style.cursor = 'pointer';
+        const evName = item.filename || item.name || 'Artifact';
+        const evType = item.evidence_type || item.type || 'File';
+        const evScore = item.risk_score ?? item.riskScore ?? 0;
+        const mitre = item.mitre_attack || item.mitreAttack || 'N/A';
+
         tr.innerHTML = `
           <td class="font-mono" style="color: var(--color-accent-red); font-weight:700;">${item.id}</td>
-          <td><span class="badge badge-type font-mono">${item.type}</span></td>
-          <td style="color: var(--text-white); font-weight:600;">${item.name}</td>
-          <td><span class="badge badge-critical font-mono">${item.riskScore} / 100</span></td>
-          <td><span class="badge badge-mitre font-mono">${item.mitreAttack || 'N/A'}</span></td>
+          <td><span class="badge badge-type font-mono">${evType}</span></td>
+          <td style="color: var(--text-white); font-weight:600;">${evName}</td>
+          <td><span class="badge badge-critical font-mono">${evScore} / 100</span></td>
+          <td><span class="badge badge-mitre font-mono">${mitre}</span></td>
         `;
         tr.addEventListener('click', () => {
           if (window.openEvidenceModal) window.openEvidenceModal(item.id);
@@ -70,13 +100,20 @@ document.addEventListener('DOMContentLoaded', () => {
       iocTableBody.innerHTML = '';
       iocList.forEach(ioc => {
         const tr = document.createElement('tr');
-        const badgeClass = `badge-${ioc.risk.toLowerCase()}`;
+        tr.style.cursor = 'pointer';
+        const val = ioc.value || ioc.ioc || '';
+        const iocType = ioc.ioc_type || ioc.type || 'Unknown';
+        const risk = ioc.risk || 'MEDIUM';
+        const badgeClass = `badge-${risk.toLowerCase()}`;
         tr.innerHTML = `
-          <td class="font-mono" style="color: var(--text-white); font-weight:700;">${ioc.ioc}</td>
-          <td><span class="badge badge-type font-mono">${ioc.type}</span></td>
-          <td><span class="badge ${badgeClass} font-mono">${ioc.risk}</span></td>
-          <td style="color: var(--text-secondary); font-size: 0.72rem;">${ioc.status} &bull; ${ioc.asn || 'Internal / Direct'}</td>
+          <td class="font-mono" style="color: var(--text-white); font-weight:700;">${val}</td>
+          <td><span class="badge badge-type font-mono">${iocType}</span></td>
+          <td><span class="badge ${badgeClass} font-mono">${risk}</span></td>
+          <td style="color: var(--text-secondary); font-size: 0.72rem;">${ioc.status || 'Active'} &bull; ${ioc.asn || 'Internal / Direct'}</td>
         `;
+        tr.addEventListener('click', () => {
+          if (window.openIocDrawer) window.openIocDrawer(ioc);
+        });
         iocTableBody.appendChild(tr);
       });
     }
@@ -87,17 +124,20 @@ document.addEventListener('DOMContentLoaded', () => {
       timelineList.forEach(evt => {
         const item = document.createElement('div');
         item.style.cssText = 'background: var(--bg-panel); border: 1px solid var(--border-subtle); padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px;';
-        
-        const sevClass = `badge-${evt.severity.toLowerCase()}`;
+
+        const sev = evt.severity || 'LOW';
+        const timeVal = evt.time || (evt.timestamp && evt.timestamp.includes(' ') ? evt.timestamp.split(' ')[1] : evt.timestamp) || '09:42:00';
+        const relId = evt.evidence_id || evt.relatedEvidenceId;
+
         item.innerHTML = `
           <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="color: var(--color-accent-red); font-weight: 700; width: 65px;">${evt.time}</span>
-            <span class="badge badge-type">${evt.eventType}</span>
-            <strong style="color: var(--text-white); font-size: 0.85rem;">${evt.title}</strong>
+            <span class="font-mono" style="color: var(--color-accent-red); font-weight: 700; font-size: 0.82rem;">${timeVal}</span>
+            <span style="color: var(--text-white); font-size: 0.85rem; font-weight: 600;">${evt.title}</span>
           </div>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="color: var(--text-secondary); font-size: 0.76rem; font-family: var(--font-sans);">${evt.description}</span>
-            <span class="badge ${sevClass}">${evt.severity}</span>
+            ${evt.mitre ? `<span class="badge badge-mitre font-mono">${evt.mitre}</span>` : ''}
+            <span class="badge badge-${sev.toLowerCase()} font-mono">${sev}</span>
+            ${relId ? `<button type="button" class="chip-btn font-mono" onclick="window.openEvidenceModal('${relId}')">&rarr; ${relId}</button>` : ''}
           </div>
         `;
         timelineBody.appendChild(item);
@@ -105,197 +145,173 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Print button
+  // Print Report
   if (printBtn) {
     printBtn.addEventListener('click', () => {
       window.print();
     });
   }
 
-  // Download Plaintext TXT Report
+  // Download Plain Text Report
   if (downloadTxtBtn) {
     downloadTxtBtn.addEventListener('click', () => {
-      const stats = window.CyberTriageStore.getDashboardStatistics();
-      const evidenceList = window.CyberTriageStore.getAllEvidence();
-      const iocList = window.CyberTriageStore.getAllIOCs();
-      const timelineList = window.CyberTriageStore.getAllTimelineEvents();
+      if (!activeDossier) return;
+      const stats = activeDossier.statistics || {};
+      const evidence = activeDossier.critical_findings || [];
+      const iocs = activeDossier.iocs || [];
+      const timeline = activeDossier.timeline || [];
 
-      let txt = `================================================================================\n`;
-      txt += `CYBER TRIAGE TOOL - OFFICIAL INCIDENT INVESTIGATION REPORT\n`;
-      txt += `CASE ID: #2024-TRIAGE-01 // HOST: WS-04.CORP.INTERNAL\n`;
-      txt += `DATE: ${new Date().toISOString()}\n`;
-      txt += `PROJECT: SIH1744 - SMART INDIA HACKATHON 2024\n`;
-      txt += `================================================================================\n\n`;
+      const lines = [
+        '================================================================================',
+        '                     CYBER TRIAGE TOOL - INVESTIGATION DOSSIER                  ',
+        '                     SIH1744 • SMART INDIA HACKATHON 2024                      ',
+        '================================================================================',
+        '',
+        `DISCLAIMER: ${activeDossier.disclaimer || 'SIMULATION DATA ONLY'}`,
+        `CASE NUMBER:       INC-2024-0918`,
+        `CASE TITLE:        Project Blackout - Financial Workstation Triage`,
+        `DATE GENERATED:    ${new Date().toISOString()}`,
+        `CLASSIFICATION:    CONFIDENTIAL // TLP:AMBER (SIMULATION)`,
+        '',
+        '--------------------------------------------------------------------------------',
+        '1. INVESTIGATION TELEMETRY & SUMMARY',
+        '--------------------------------------------------------------------------------',
+        `Total Evidence Ingested:    ${stats.total_evidence ?? stats.totalEvidence ?? 42}`,
+        `Critical Findings:          ${stats.critical_findings ?? stats.criticalFindings ?? 2}`,
+        `Correlated IOCs:            ${stats.total_iocs ?? stats.totalIocs ?? 12}`,
+        `Attack Timeline Events:     ${timeline.length}`,
+        '',
+        '--------------------------------------------------------------------------------',
+        '2. CRITICAL FORENSIC FINDINGS (SCORE >= 75)',
+        '--------------------------------------------------------------------------------'
+      ];
 
-      txt += `1.0 EXECUTIVE SUMMARY\n`;
-      txt += `--------------------------------------------------------------------------------\n`;
-      txt += `On October 14, 2024 at 09:42 UTC, workstation WS-04 was compromised via spearphishing.\n`;
-      txt += `A multi-stage attack was identified: weaponized dropper -> temp space implant ->\n`;
-      txt += `PowerShell C2 socket -> LSASS dump -> Domain Admin Pass-the-Hash -> lateral movement\n`;
-      txt += `to DC-01 -> exfiltration of 34.4 MB to offshore IP 91.240.118.172.\n\n`;
-
-      txt += `2.0 EVIDENCE STATISTICS\n`;
-      txt += `--------------------------------------------------------------------------------\n`;
-      txt += `Total Artifacts Ingested:   ${stats.totalEvidence}\n`;
-      txt += `Critical Findings:          ${stats.criticalFindings}\n`;
-      txt += `High Severity Findings:     ${stats.riskDistribution.HIGH}\n`;
-      txt += `Confirmed IOCs:             ${stats.totalIocs}\n\n`;
-
-      txt += `3.0 CRITICAL EVIDENCE FINDINGS (RISK >= 75)\n`;
-      txt += `--------------------------------------------------------------------------------\n`;
-      evidenceList.filter(e => e.riskScore >= 75).forEach(e => {
-        txt += `[${e.id}] ${e.name}\n`;
-        txt += `  Type:       ${e.type} | Risk: ${e.riskScore}/100 (${e.riskTier})\n`;
-        txt += `  Source:     ${e.source}\n`;
-        txt += `  Timestamp:  ${e.timestamp}\n`;
-        txt += `  SHA-256:    ${e.sha256 || 'N/A'}\n`;
-        txt += `  MITRE:      ${e.mitreAttack || 'N/A'}\n`;
-        txt += `  Details:    ${e.description}\n\n`;
+      evidence.forEach(item => {
+        const name = item.filename || item.name;
+        const score = item.risk_score ?? item.riskScore ?? 0;
+        const mitre = item.mitre_attack || item.mitreAttack || 'N/A';
+        lines.push(`[${item.id}] ${name} | SCORE: ${score}/100 | MITRE: ${mitre}`);
+        lines.push(`   Source:      ${item.source || item.original_path || 'N/A'}`);
+        lines.push(`   SHA-256:     ${item.sha256 || 'N/A'}`);
+        lines.push(`   Description: ${item.description || 'N/A'}`);
+        lines.push('');
       });
 
-      txt += `4.0 CONFIRMED INDICATORS OF COMPROMISE (IOCs)\n`;
-      txt += `--------------------------------------------------------------------------------\n`;
-      iocList.forEach(i => {
-        txt += `* [${i.risk}] ${i.ioc} (${i.type})\n`;
-        txt += `  Status: ${i.status} | Occurrences: ${i.occurrences} | First Seen: ${i.firstSeen}\n`;
+      lines.push('--------------------------------------------------------------------------------');
+      lines.push('3. VERIFIED INDICATORS OF COMPROMISE (IOCs)');
+      lines.push('--------------------------------------------------------------------------------');
+      iocs.forEach(ioc => {
+        const val = ioc.value || ioc.ioc;
+        const type = ioc.ioc_type || ioc.type;
+        lines.push(`- ${val.padEnd(45)} [${type.padEnd(16)}] RISK: ${ioc.risk} | STATUS: ${ioc.status || 'Active'}`);
       });
-      txt += `\n`;
 
-      txt += `5.0 ATTACK TIMELINE CHRONOLOGY\n`;
-      txt += `--------------------------------------------------------------------------------\n`;
-      timelineList.forEach(t => {
-        txt += `${t.time} UTC - [${t.severity}] ${t.title} (${t.eventType})\n`;
-        txt += `  ${t.description}\n`;
-        if (t.relatedEvidenceId) txt += `  Related Evidence: ${t.relatedEvidenceId}\n`;
+      lines.push('');
+      lines.push('--------------------------------------------------------------------------------');
+      lines.push('4. CHRONOLOGICAL ATTACK TIMELINE');
+      lines.push('--------------------------------------------------------------------------------');
+      timeline.forEach(evt => {
+        const time = evt.time || evt.timestamp;
+        lines.push(`${time} [${evt.severity}] ${evt.title}`);
+        lines.push(`   ${evt.description}`);
       });
-      txt += `\n`;
 
-      txt += `6.0 CHAIN OF CUSTODY & INTEGRITY\n`;
-      txt += `--------------------------------------------------------------------------------\n`;
-      txt += `Bitstream validation verified via SHA-256 / Blake3 hash signatures.\n`;
-      txt += `ISO/IEC 27037 Digital Evidence Compliance Confirmed.\n`;
-      txt += `================================================================================\n`;
-      txt += `END OF REPORT\n`;
+      lines.push('');
+      lines.push('================================================================================');
+      lines.push('END OF DOSSIER • GENERATED BY CYBER TRIAGE ENGINE (SIH1744)');
+      lines.push('================================================================================');
 
-      const blob = new Blob([txt], { type: 'text/plain;charset=utf-8;' });
+      const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `CyberTriage_Report_Case2024-01_${Date.now()}.txt`);
+      link.href = url;
+      link.download = `INC-2024-0918_dossier_${Date.now()}.txt`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      if (window.showAppToast) window.showAppToast('FORENSIC DOSSIER DOWNLOADED AS TXT');
+
+      if (window.showAppToast) window.showAppToast('PLAIN TEXT REPORT DOWNLOADED');
     });
   }
 
-  // Generate Standalone Downloadable HTML Report
+  // Download Standalone HTML Report
   if (generateHtmlBtn) {
     generateHtmlBtn.addEventListener('click', () => {
-      const stats = window.CyberTriageStore.getDashboardStatistics();
-      const evidenceList = window.CyberTriageStore.getAllEvidence();
-      const iocList = window.CyberTriageStore.getAllIOCs();
-      const timelineList = window.CyberTriageStore.getAllTimelineEvents();
-
+      if (!activeDossier) return;
       const htmlContent = `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Cyber Triage Report - Case #2024-TRIAGE-01</title>
+  <title>Forensic Dossier - INC-2024-0918 | SIH1744</title>
   <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #08090c; color: #f1f5f9; padding: 40px; margin: 0; }
-    .report-card { max-width: 1000px; margin: 0 auto; background: #0d0f14; border: 1px solid rgba(255,255,255,0.1); border-top: 4px solid #ff2a2a; padding: 36px; }
-    h1, h2, h3 { font-family: monospace; color: #ffffff; }
-    h1 { font-size: 24px; margin-top: 6px; }
-    .badge { display: inline-block; padding: 3px 8px; font-size: 11px; font-family: monospace; font-weight: bold; border-radius: 2px; }
-    .badge-crit { background: rgba(255,42,42,0.2); color: #ff3333; border: 1px solid #ff2a2a; }
-    .badge-high { background: rgba(255,107,53,0.2); color: #ff6b35; border: 1px solid #ff6b35; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-    th, td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.08); text-align: left; }
-    th { font-family: monospace; color: #94a3b8; background: #0a0c10; }
-    .mono { font-family: monospace; }
-    .stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0; }
-    .stat-box { background: #0a0c10; border: 1px solid rgba(255,255,255,0.08); padding: 14px; text-align: center; }
-    .stat-num { font-size: 28px; font-weight: bold; font-family: monospace; color: #ffffff; }
-    .timeline-item { background: #0a0c10; border-left: 3px solid #ff2a2a; padding: 10px 14px; margin-bottom: 8px; font-family: monospace; font-size: 12px; }
+    body { background: #08090c; color: #e1e4ea; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; margin: 0; line-height: 1.6; }
+    .container { max-width: 900px; margin: 0 auto; background: #0f1117; border: 1px solid #232733; padding: 32px; border-left: 4px solid #ff2a2a; }
+    h1 { color: #ffffff; margin-top: 0; font-size: 1.6rem; letter-spacing: 0.05em; }
+    .disclaimer { background: rgba(255, 42, 42, 0.12); border: 1px solid #ff2a2a; padding: 12px; font-family: monospace; font-size: 0.8rem; color: #ff6666; margin-bottom: 24px; }
+    .meta { font-family: monospace; font-size: 0.8rem; color: #8a92a6; margin-bottom: 20px; }
+    .badge { display: inline-block; padding: 2px 6px; font-size: 0.72rem; font-family: monospace; font-weight: 700; border-radius: 2px; }
+    .badge-critical { background: rgba(255, 42, 42, 0.2); color: #ff4444; border: 1px solid #ff4444; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 0.85rem; }
+    th, td { border: 1px solid #232733; padding: 8px 12px; text-align: left; }
+    th { background: #161922; color: #8a92a6; font-family: monospace; font-size: 0.75rem; }
   </style>
 </head>
 <body>
-  <div class="report-card">
-    <span class="badge badge-crit">CONFIDENTIAL // DIGITAL FORENSICS DOSSIER</span>
-    <h1>CASE #2024-TRIAGE-01: WS-04 FORENSIC TRIAGE REPORT</h1>
-    <p class="mono" style="color: #94a3b8; font-size: 12px;">Generated via SIH1744 Cyber Triage Engine &bull; Target: WS-04.CORP.INTERNAL &bull; ${new Date().toUTCString()}</p>
-    <hr style="border:none; border-top: 1px solid rgba(255,255,255,0.1); margin: 20px 0;">
-
-    <h3>1.0 EXECUTIVE SUMMARY</h3>
-    <p style="font-size: 14px; line-height: 1.6; color: #cbd5e1;">Workstation WS-04 was compromised via spearphishing. Rapid triage correlated 42 forensic artifacts reconstructing a complete Cobalt Strike execution kill chain resulting in Domain Admin token replay and 34.4 MB external exfiltration.</p>
-
-    <h3>2.0 TRIAGE METRICS</h3>
-    <div class="stat-row">
-      <div class="stat-box"><div class="stat-num">${stats.totalEvidence}</div><div class="mono" style="font-size: 11px; color: #94a3b8;">TOTAL ARTIFACTS</div></div>
-      <div class="stat-box"><div class="stat-num" style="color: #ff2a2a;">${stats.criticalFindings}</div><div class="mono" style="font-size: 11px; color: #94a3b8;">CRITICAL FINDINGS</div></div>
-      <div class="stat-box"><div class="stat-num" style="color: #ff6b35;">${stats.riskDistribution.HIGH}</div><div class="mono" style="font-size: 11px; color: #94a3b8;">HIGH SEVERITY</div></div>
-      <div class="stat-box"><div class="stat-num" style="color: #f59e0b;">${stats.totalIocs}</div><div class="mono" style="font-size: 11px; color: #94a3b8;">CORRELATED IOCs</div></div>
+  <div class="container">
+    <div class="disclaimer">
+      <strong>SIMULATION DATA:</strong> ${activeDossier.disclaimer}
     </div>
-
-    <h3>3.0 CRITICAL EVIDENCE FINDINGS (RISK >= 75)</h3>
+    <h1>INC-2024-0918: FINANCIAL WORKSTATION TRIAGE</h1>
+    <div class="meta">
+      CLASSIFICATION: CONFIDENTIAL // TLP:AMBER &bull; GENERATED: ${new Date().toISOString()} &bull; SIH1744
+    </div>
+    <h2>Executive Investigation Summary</h2>
+    <p>Comprehensive forensic triage investigation into suspected initial access via spearphishing link, payload delivery, secondary implant staging, LOLBin reconnaissance, credential harvesting via LSASS process memory dump, and outbound C2 data exfiltration.</p>
+    <h2>Critical Findings</h2>
     <table>
-      <thead><tr><th>ID</th><th>TYPE</th><th>NAME</th><th>RISK</th><th>MITRE ATT&CK</th></tr></thead>
+      <thead>
+        <tr><th>ID</th><th>Type</th><th>Name</th><th>Risk Score</th></tr>
+      </thead>
       <tbody>
-        ${evidenceList.filter(e => e.riskScore >= 75).map(e => `
+        ${(activeDossier.critical_findings || []).map(f => `
           <tr>
-            <td class="mono" style="color: #ff2a2a; font-weight:bold;">${e.id}</td>
-            <td class="mono">${e.type}</td>
-            <td><strong>${e.name}</strong><br><small style="color: #94a3b8;">${e.source}</small></td>
-            <td class="mono"><span class="badge badge-crit">${e.riskScore} / 100</span></td>
-            <td class="mono" style="color: #c084fc;">${e.mitreAttack || 'N/A'}</td>
+            <td style="font-family: monospace; color: #ff2a2a; font-weight: bold;">${f.id}</td>
+            <td>${f.evidence_type || f.type}</td>
+            <td>${f.filename || f.name}</td>
+            <td><span class="badge badge-critical">${f.risk_score ?? f.riskScore} / 100</span></td>
           </tr>
         `).join('')}
       </tbody>
     </table>
-
-    <h3 style="margin-top: 24px;">4.0 CONFIRMED INDICATORS OF COMPROMISE</h3>
+    <h2>Verified Indicators of Compromise</h2>
     <table>
-      <thead><tr><th>INDICATOR</th><th>TYPE</th><th>RISK</th><th>STATUS</th></tr></thead>
+      <thead>
+        <tr><th>IOC Value</th><th>Type</th><th>Risk</th></tr>
+      </thead>
       <tbody>
-        ${iocList.map(i => `
+        ${(activeDossier.iocs || []).map(i => `
           <tr>
-            <td class="mono" style="color: #ffffff; font-weight:bold;">${i.ioc}</td>
-            <td class="mono">${i.type}</td>
-            <td><span class="badge ${i.risk === 'CRITICAL' ? 'badge-crit' : 'badge-high'}">${i.risk}</span></td>
-            <td class="mono" style="color: #fbbf24;">${i.status}</td>
+            <td style="font-family: monospace; color: #fff;">${i.value || i.ioc}</td>
+            <td>${i.ioc_type || i.type}</td>
+            <td>${i.risk}</td>
           </tr>
         `).join('')}
       </tbody>
     </table>
-
-    <h3 style="margin-top: 24px;">5.0 ATTACK KILL CHAIN TIMELINE</h3>
-    <div>
-      ${timelineList.map(t => `
-        <div class="timeline-item">
-          <span style="color: #ff2a2a; font-weight: bold;">${t.time} UTC</span> &bull; 
-          <span class="badge ${t.severity === 'CRITICAL' ? 'badge-crit' : 'badge-high'}">${t.severity}</span>
-          <strong>${t.title}</strong> (${t.eventType})
-          <div style="color: #94a3b8; font-family: sans-serif; font-size: 13px; margin-top: 4px;">${t.description}</div>
-        </div>
-      `).join('')}
-    </div>
-
-    <hr style="border:none; border-top: 1px solid rgba(255,255,255,0.1); margin: 24px 0;">
-    <p class="mono" style="font-size: 11px; color: #64748b; text-align: center;">SIH1744 CYBER TRIAGE ENGINE &bull; ISO/IEC 27037 FORENSIC AUDIT TRAIL CONFIRMED</p>
   </div>
 </body>
 </html>`;
 
-      const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+      const blob = new Blob([htmlContent], { type: 'text/html' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `CyberTriage_CaseReport_2024-01_${Date.now()}.html`);
+      link.href = url;
+      link.download = `INC-2024-0918_report_${Date.now()}.html`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      if (window.showAppToast) window.showAppToast('STANDALONE HTML REPORT GENERATED & DOWNLOADED');
+
+      if (window.showAppToast) window.showAppToast('STANDALONE HTML REPORT GENERATED');
     });
   }
 

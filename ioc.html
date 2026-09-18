@@ -3,180 +3,203 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Cyber Triage Tool - Indicator of Compromise (IOC) Analysis | SIH1744">
-  <meta name="theme-color" content="#08090c">
+  <meta name="description" content="Cyber Triage Tool - Indicators of Compromise (IOC) Analysis | SIH1744">
+  <meta name="theme-color" content="#090b0e">
   <title>IOC Analysis | Cyber Triage Tool</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
 
-  <!-- Global Technical Header -->
-  <header class="app-header font-mono" role="banner">
-    <div class="nav-wrapper">
-      <a href="index.html" class="nav-brand" title="Return to Overview">
-        <span class="brand-badge">CT</span>
-        <div class="brand-text">
-          <span class="brand-title">CYBER TRIAGE TOOL</span>
-          <span class="brand-meta">SIH1744 &bull; SIH 2024</span>
-        </div>
-      </a>
-
-      <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
-
-      <ul class="nav-links" id="navLinksContainer">
-        <li><a href="index.html" class="nav-link">HOME</a></li>
-        <li><a href="dashboard.html" class="nav-link">DASHBOARD</a></li>
-        <li><a href="evidence.html" class="nav-link">EVIDENCE</a></li>
-        <li><a href="ioc.html" class="nav-link active">IOC ANALYSIS</a></li>
-        <li><a href="timeline.html" class="nav-link">TIMELINE</a></li>
-        <li><a href="graph.html" class="nav-link">GRAPH</a></li>
-        <li><a href="reports.html" class="nav-link">REPORTS</a></li>
-      </ul>
-
-      <div class="nav-actions">
-        <div class="case-indicator">
-          <span class="case-pulse"></span>
-          <span>CASE #2024-TRIAGE-01</span>
-        </div>
-        <button type="button" class="btn-acquire-quick font-mono" title="Acquire new forensic evidence file">
-          <span>+ ACQUIRE</span>
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Container -->
-  <main class="app-container" style="margin-top: 24px;">
+  <div class="app-shell">
     
-    <!-- Page Header -->
-    <section class="page-header" aria-label="IOC Repository Header">
-      <div class="header-left">
-        <span class="page-category font-mono">THREAT INTELLIGENCE &amp; CORRELATION</span>
-        <h1 class="page-title">Indicator of Compromise (IOC) Analysis</h1>
-        <p class="page-subtitle">
-          Correlated threat indicators including C2 IP addresses, weaponized domains, cryptographic hashes, suspicious binaries, and malicious accounts.
-        </p>
+    <!-- Global Top Bar -->
+    <header class="app-topbar">
+      <div class="topbar-left">
+        <button type="button" class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle navigation menu">&#9776;</button>
+        <a href="index.html" class="topbar-brand" title="Return to Overview">
+          <span class="brand-badge">CT</span>
+          <span>CYBER TRIAGE</span>
+        </a>
+        <div class="topbar-divider"></div>
+        <div class="topbar-case font-mono">
+          <span class="case-id">CASE: INC-2024-0918</span>
+          <span class="case-title">&bull; Windows Endpoint Triage</span>
+        </div>
+        <span class="simulation-pill">SIMULATION DATA</span>
       </div>
-      <div class="header-right font-mono">
-        <button type="button" class="action-btn" id="exportIocCsvBtn">EXPORT IOC FEED</button>
+      <div class="topbar-right">
+        <div class="status-indicator">
+          <span class="status-dot"></span>
+          <span>System Ready</span>
+        </div>
+        <button type="button" class="topbar-btn-ingest" id="quickIngestBtn">+ Ingest Evidence</button>
+        <div class="topbar-user">Analyst: DFIR-01</div>
       </div>
-    </section>
+    </header>
 
-    <!-- IOC Metrics Summary -->
-    <section class="metrics-grid font-mono" style="grid-template-columns: repeat(4, 1fr);">
-      <div class="metric-card accent-red">
-        <div class="metric-header"><span>CRITICAL IOCs</span><span class="metric-icon">&#9888;</span></div>
-        <div class="metric-value" id="iocCountCritical">0</div>
-        <div class="metric-footer">Active C2 &amp; payload hashes</div>
-      </div>
-      <div class="metric-card accent-orange">
-        <div class="metric-header"><span>HIGH SEVERITY</span><span class="metric-icon">&#9733;</span></div>
-        <div class="metric-value" id="iocCountHigh">0</div>
-        <div class="metric-footer">Adversary infrastructure</div>
-      </div>
-      <div class="metric-card accent-amber">
-        <div class="metric-header"><span>UNIQUE DOMAINS / IPs</span><span class="metric-icon">&#127760;</span></div>
-        <div class="metric-value" id="iocCountNet">0</div>
-        <div class="metric-footer">External egress points</div>
-      </div>
-      <div class="metric-card accent-cyan">
-        <div class="metric-header"><span>MALICIOUS HASHES</span><span class="metric-icon">&#128272;</span></div>
-        <div class="metric-value" id="iocCountHashes">0</div>
-        <div class="metric-footer">SHA-256 confirmed matches</div>
-      </div>
-    </section>
-
-    <!-- IOC Data Panel -->
-    <section class="data-panel" aria-label="IOC Repository Table">
+    <!-- App Body: Left Sidebar + Main Viewport -->
+    <div class="app-body">
       
-      <!-- Toolbar: Search & Filters -->
-      <div class="panel-toolbar font-mono">
-        <div class="toolbar-search">
-          <span style="color: var(--text-muted); margin-right: 8px;">&#128269;</span>
-          <input type="text" id="iocSearchInput" class="search-input" placeholder="SEARCH IOC VALUE, ASN, STATUS...">
+      <!-- Minimal Left Sidebar -->
+      <aside class="app-sidebar font-mono" aria-label="Investigation Navigation">
+        <div>
+          <div class="sidebar-section-title">INVESTIGATION</div>
+          <ul class="sidebar-nav">
+            <li>
+              <a href="dashboard.html" class="sidebar-link" data-page="dashboard">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                Overview
+              </a>
+            </li>
+            <li>
+              <a href="evidence.html" class="sidebar-link" data-page="evidence">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+                Evidence
+              </a>
+            </li>
+            <li>
+              <a href="ioc.html" class="sidebar-link active" data-page="ioc">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                IOCs
+              </a>
+            </li>
+            <li>
+              <a href="timeline.html" class="sidebar-link" data-page="timeline">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                Timeline
+              </a>
+            </li>
+            <li>
+              <a href="graph.html" class="sidebar-link" data-page="graph">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                Investigation
+              </a>
+            </li>
+            <li>
+              <a href="reports.html" class="sidebar-link" data-page="reports">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h2"></path><rect x="8" y="10" width="12" height="12" rx="1"></rect></svg>
+                Reports
+              </a>
+            </li>
+          </ul>
         </div>
-
-        <div class="toolbar-filters">
-          <!-- Type Filter -->
-          <label for="iocTypeFilter" style="font-size: 0.68rem; color: var(--text-muted);">TYPE:</label>
-          <select id="iocTypeFilter" class="custom-select">
-            <option value="ALL">ALL INDICATOR TYPES</option>
-            <option value="IP Address">IP ADDRESS</option>
-            <option value="Domain">DOMAIN</option>
-            <option value="URL">URL</option>
-            <option value="File Hash">FILE HASH</option>
-            <option value="Process">PROCESS</option>
-            <option value="File">FILE</option>
-            <option value="User">USER / ACCOUNT</option>
-          </select>
-
-          <!-- Risk Filter -->
-          <label for="iocRiskFilter" style="font-size: 0.68rem; color: var(--text-muted);">RISK:</label>
-          <select id="iocRiskFilter" class="custom-select">
-            <option value="ALL">ALL SEVERITIES</option>
-            <option value="CRITICAL">CRITICAL</option>
-            <option value="HIGH">HIGH</option>
-            <option value="MEDIUM">MEDIUM</option>
-          </select>
+        <div class="sidebar-footer">
+          <div class="sidebar-divider"></div>
+          <a href="index.html" class="sidebar-link" title="Return to Landing Page">
+            <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+            Home Landing
+          </a>
         </div>
-      </div>
+      </aside>
 
-      <!-- Table Container -->
-      <div class="table-responsive">
-        <table class="triage-table" id="iocTable">
-          <thead>
-            <tr>
-              <th class="font-mono">INDICATOR VALUE</th>
-              <th class="font-mono">TYPE</th>
-              <th class="font-mono">OCCURRENCES</th>
-              <th class="font-mono">FIRST SEEN (UTC)</th>
-              <th class="font-mono">LAST SEEN (UTC)</th>
-              <th class="font-mono">RISK</th>
-              <th class="font-mono">STATUS</th>
-              <th class="font-mono">ACTION</th>
-            </tr>
-          </thead>
-          <tbody id="iocTableBody">
-            <!-- Dynamically populated by js/ioc.js -->
-          </tbody>
-        </table>
-      </div>
+      <!-- Main Content Viewport -->
+      <main class="app-main" role="main">
+        
+        <!-- Page Header -->
+        <section class="page-header" aria-label="IOC Analysis Header">
+          <div class="page-header-text">
+            <span class="page-category-label">CASE INC-2024-0918 &bull; THREAT INTELLIGENCE &amp; REPUTATION</span>
+            <h1 class="page-title">Indicators of Compromise (IOCs)</h1>
+            <p class="page-description">
+              Correlated threat indicators including C2 IP addresses, suspicious payload hashes, weaponized domains, and phishing URLs. Click any item to inspect correlated evidence in the drawer.
+            </p>
+          </div>
+          <div class="page-actions">
+            <button type="button" class="btn-secondary" id="exportIocCsvBtn">Export CSV</button>
+          </div>
+        </section>
 
-      <div class="panel-footer font-mono">
-        <span id="iocCounter">SHOWING 12 OF 12 CORRELATED IOCs</span>
-        <span style="color: var(--text-muted); font-size: 0.68rem;">CLICK ANY ROW TO VIEW ASSOCIATED EVIDENCE RECORDS</span>
-      </div>
+        <!-- 4 Summary KPI Cards -->
+        <section class="kpi-row" style="grid-template-columns: repeat(4, 1fr);" aria-label="IOC Statistics">
+          <div class="kpi-card kpi-critical">
+            <span class="kpi-label">CRITICAL THREATS</span>
+            <span class="kpi-value" id="iocCountCritical" style="color: #ff6b6b;">--</span>
+            <span class="kpi-meta">Active C2 &amp; Droppers</span>
+          </div>
 
-    </section>
+          <div class="kpi-card kpi-high">
+            <span class="kpi-label">HIGH SEVERITY</span>
+            <span class="kpi-value" id="iocCountHigh" style="color: #fcc419;">--</span>
+            <span class="kpi-meta">Suspicious Infrastructure</span>
+          </div>
 
-  </main>
+          <div class="kpi-card">
+            <span class="kpi-label">NETWORK IPs &amp; DOMAINS</span>
+            <span class="kpi-value" id="iocCountNet">--</span>
+            <span class="kpi-meta">External Endpoints</span>
+          </div>
 
-  <!-- Modal: Related Evidence for IOC -->
-  <div class="modal-overlay" id="iocRelatedModal">
-    <div class="modal-box font-mono" role="dialog" aria-modal="true" aria-labelledby="iocModalTitle">
-      <div class="modal-header">
-        <div class="modal-title" id="iocModalTitle">
-          <span class="badge badge-critical">IOC CORRELATION</span>
-          <span id="iocModalValue">185.220.101.44</span>
-        </div>
-        <button type="button" class="modal-close-btn" id="closeIocModalBtn">&times; CLOSE</button>
-      </div>
-      <div class="modal-body" id="iocModalBody">
-        <!-- Injected via js/ioc.js -->
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="action-btn" id="dismissIocModalBtn">DISMISS</button>
-      </div>
+          <div class="kpi-card">
+            <span class="kpi-label">FILE HASHES</span>
+            <span class="kpi-value" id="iocCountHashes">--</span>
+            <span class="kpi-meta">SHA-256 Checksums</span>
+          </div>
+        </section>
+
+        <!-- Filter Toolbar -->
+        <section class="toolbar-container font-mono" aria-label="IOC Filter Toolbar">
+          <div class="toolbar-left">
+            <input type="text" id="iocSearchInput" class="search-input" placeholder="Search indicator value, ASN, context...">
+
+            <!-- Type Filter -->
+            <select id="iocTypeFilter" class="filter-select" aria-label="Filter by IOC Type">
+              <option value="ALL">ALL TYPES</option>
+              <option value="IP">IP ADDRESSES</option>
+              <option value="Domain">DOMAINS</option>
+              <option value="Hash">FILE HASHES</option>
+              <option value="URL">WEAPONIZED URLs</option>
+            </select>
+
+            <!-- Risk Filter -->
+            <select id="iocRiskFilter" class="filter-select" aria-label="Filter by Risk Level">
+              <option value="ALL">ALL SEVERITIES</option>
+              <option value="CRITICAL">CRITICAL</option>
+              <option value="HIGH">HIGH</option>
+              <option value="MEDIUM">MEDIUM</option>
+              <option value="LOW">LOW</option>
+            </select>
+          </div>
+
+          <div class="toolbar-right">
+            <span id="iocCounter" style="font-size: 0.68rem; color: var(--text-muted); white-space: nowrap;">
+              LOADING INDICATORS...
+            </span>
+          </div>
+        </section>
+
+        <!-- Streamlined Data Table -->
+        <section class="data-table-container" aria-label="IOC Table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>INDICATOR VALUE</th>
+                <th style="width: 100px;">TYPE</th>
+                <th style="width: 110px;">THREAT LEVEL</th>
+                <th>INFRASTRUCTURE / CONTEXT</th>
+                <th style="width: 140px;">CORRELATED EVIDENCE</th>
+                <th style="width: 80px; text-align: right;">ACTION</th>
+              </tr>
+            </thead>
+            <tbody id="iocTableBody">
+              <!-- Dynamically populated by js/ioc.js -->
+            </tbody>
+          </table>
+        </section>
+
+      </main>
+
     </div>
+
   </div>
 
+  <script src="js/api.js"></script>
   <script src="js/data.js"></script>
   <script src="js/app.js"></script>
   <script src="js/ioc.js"></script>

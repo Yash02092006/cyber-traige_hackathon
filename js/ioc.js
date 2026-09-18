@@ -1,17 +1,12 @@
 /**
  * CYBER TRIAGE TOOL - SIH1744
  * Indicator of Compromise (IOC) Engine
- * Dynamic table rendering, search, filtering, related evidence correlation modal,
- * and CSV export.
+ * Dynamic table rendering, search, filtering, right-side drawer inspection,
+ * and CSV export connected to REST API.
  */
 
 document.addEventListener('DOMContentLoaded', () => {
   'use strict';
-
-  if (!window.CyberTriageStore) {
-    console.error('CyberTriageStore not found.');
-    return;
-  }
 
   // DOM Elements
   const tableBody = document.getElementById('iocTableBody');
@@ -27,211 +22,188 @@ document.addEventListener('DOMContentLoaded', () => {
   const elNet = document.getElementById('iocCountNet');
   const elHash = document.getElementById('iocCountHashes');
 
-  // Modal Elements
-  const iocModal = document.getElementById('iocRelatedModal');
-  const iocModalTitle = document.getElementById('iocModalValue');
-  const iocModalBody = document.getElementById('iocModalBody');
-  const closeIocModalBtn = document.getElementById('closeIocModalBtn');
-  const dismissIocModalBtn = document.getElementById('dismissIocModalBtn');
+  let currentLoadedIocs = [];
 
-  const closeIocModal = () => iocModal.classList.remove('open');
-  if (closeIocModalBtn) closeIocModalBtn.addEventListener('click', closeIocModal);
-  if (dismissIocModalBtn) dismissIocModalBtn.addEventListener('click', closeIocModal);
-  if (iocModal) {
-    iocModal.addEventListener('click', (e) => {
-      if (e.target === iocModal) closeIocModal();
-    });
-  }
-
-  function openIocEvidenceModal(iocObj) {
-    if (!iocModal || !iocModalBody) return;
-
-    iocModalTitle.textContent = iocObj.ioc;
-
-    // Find all evidence records containing this IOC in their relatedIocs or matching properties
-    const allEvidence = window.CyberTriageStore.getAllEvidence();
-    const relatedEvidence = allEvidence.filter(ev => {
-      if (iocObj.relatedEvidenceIds && iocObj.relatedEvidenceIds.includes(ev.id)) return true;
-      if (ev.relatedIocs && ev.relatedIocs.includes(iocObj.ioc)) return true;
-      if (ev.sha256 === iocObj.ioc) return true;
-      if (ev.destinationIp === iocObj.ioc) return true;
-      if (ev.name === iocObj.ioc) return true;
-      return false;
-    });
-
-    let evidenceHtml = '';
-    if (relatedEvidence.length === 0) {
-      evidenceHtml = `
-        <div style="padding: 24px; text-align: center; color: var(--text-muted);">
-          No direct evidence records explicitly mapped to this IOC.
-        </div>
-      `;
-    } else {
-      evidenceHtml = `
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <span style="font-size: 0.72rem; color: var(--text-muted); letter-spacing: 0.08em;">
-            FOUND ${relatedEvidence.length} ASSOCIATED FORENSIC ARTIFACTS:
-          </span>
-          ${relatedEvidence.map(ev => {
-            const riskClass = `badge-${(ev.riskTier || 'LOW').toLowerCase()}`;
-            return `
-              <div style="background: var(--bg-panel); border: 1px solid var(--border-subtle); padding: 12px; display: flex; justify-content: space-between; align-items: center; gap: 12px; cursor: pointer; transition: border-color 0.15s;" class="ioc-ev-card" onclick="window.openEvidenceModal('${ev.id}')">
-                <div style="display: flex; flex-direction: column; gap: 3px;">
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="color: var(--color-accent-red); font-weight: 700;">${ev.id}</span>
-                    <span class="badge badge-type">${ev.type}</span>
-                    <strong style="color: var(--text-white); font-size: 0.85rem;">${ev.name}</strong>
-                  </div>
-                  <span style="color: var(--text-muted); font-size: 0.72rem;">${ev.source}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
-                  <span class="badge ${riskClass}">${ev.riskScore} PTS</span>
-                  <button type="button" class="table-action-btn font-mono">INSPECT &rarr;</button>
-                </div>
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    }
-
-    iocModalBody.innerHTML = `
-      <!-- IOC Metadata Summary -->
-      <div class="meta-field-group">
-        <div class="meta-field">
-          <span class="meta-label">IOC VALUE:</span>
-          <span class="meta-val font-mono" style="color: #ff3333;">${iocObj.ioc}</span>
-        </div>
-        <div class="meta-field">
-          <span class="meta-label">TYPE / CATEGORY:</span>
-          <span class="meta-val">${iocObj.type}</span>
-        </div>
-        <div class="meta-field">
-          <span class="meta-label">TOTAL OCCURRENCES:</span>
-          <span class="meta-val">${iocObj.occurrences} Times Observed</span>
-        </div>
-        <div class="meta-field">
-          <span class="meta-label">THREAT STATUS:</span>
-          <span class="meta-val" style="color: #fbbf24;">${iocObj.status}</span>
-        </div>
-        <div class="meta-field">
-          <span class="meta-label">FIRST SEEN (UTC):</span>
-          <span class="meta-val">${iocObj.firstSeen}</span>
-        </div>
-        <div class="meta-field">
-          <span class="meta-label">LAST SEEN (UTC):</span>
-          <span class="meta-val">${iocObj.lastSeen}</span>
-        </div>
-      </div>
-
-      <!-- Associated Evidence List -->
-      ${evidenceHtml}
-    `;
-
-    iocModal.classList.add('open');
-  }
-
-  function renderIOCs() {
+  async function renderTable() {
     if (!tableBody) return;
-    const allIocs = window.CyberTriageStore.getAllIOCs();
 
-    // Update Top Summary Counts
-    if (elCrit) elCrit.textContent = allIocs.filter(i => i.risk === 'CRITICAL').length;
-    if (elHigh) elHigh.textContent = allIocs.filter(i => i.risk === 'HIGH').length;
-    if (elNet) elNet.textContent = allIocs.filter(i => i.type.includes('IP') || i.type.includes('Domain')).length;
-    if (elHash) elHash.textContent = allIocs.filter(i => i.type.includes('Hash')).length;
-
-    const query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+    const query = (searchInput ? searchInput.value : '').trim();
     const typeVal = typeFilter ? typeFilter.value : 'ALL';
     const riskVal = riskFilter ? riskFilter.value : 'ALL';
 
-    // Filter
-    const filtered = allIocs.filter(item => {
-      if (typeVal !== 'ALL' && !item.type.toLowerCase().includes(typeVal.toLowerCase())) return false;
-      if (riskVal !== 'ALL' && item.risk !== riskVal) return false;
+    let iocs = [];
 
-      if (query) {
-        const matchVal = (item.ioc || '').toLowerCase().includes(query);
-        const matchType = (item.type || '').toLowerCase().includes(query);
-        const matchStatus = (item.status || '').toLowerCase().includes(query);
-        const matchCountry = (item.country || '').toLowerCase().includes(query);
-        const matchAsn = (item.asn || '').toLowerCase().includes(query);
-        if (!matchVal && !matchType && !matchStatus && !matchCountry && !matchAsn) return false;
+    // 1. Fetch from FastAPI Backend
+    if (window.CyberTriageAPI) {
+      try {
+        iocs = await window.CyberTriageAPI.getIOCs(1, {
+          ioc_type: typeVal,
+          risk: riskVal,
+          search: query
+        });
+      } catch (err) {
+        console.warn('[ioc.js] API fetch failed, trying local fallback:', err);
       }
-      return true;
-    });
-
-    if (counterEl) {
-      counterEl.textContent = `SHOWING ${filtered.length} OF ${allIocs.length} CORRELATED IOCs`;
     }
 
+    // 2. Client-side fallback if offline
+    if ((!iocs || iocs.length === 0) && window.CyberTriageStore) {
+      const allIocs = window.CyberTriageStore.getAllIOCs();
+      iocs = allIocs.filter(item => {
+        const itemType = item.type || item.ioc_type || 'IP';
+        const itemRisk = item.risk || item.threat_level || 'MEDIUM';
+
+        if (typeVal !== 'ALL' && itemType !== typeVal) return false;
+        if (riskVal !== 'ALL' && itemRisk !== riskVal) return false;
+
+        if (query) {
+          const q = query.toLowerCase();
+          const matchVal = (item.value || item.ioc || '').toLowerCase().includes(q);
+          const matchCtx = (item.context || item.description || '').toLowerCase().includes(q);
+          if (!matchVal && !matchCtx) return false;
+        }
+        return true;
+      });
+    }
+
+    currentLoadedIocs = iocs || [];
+
+    // 3. Compute Summary Card Counts
+    if (elCrit || elHigh || elNet || elHash) {
+      let critCount = 0, highCount = 0, netCount = 0, hashCount = 0;
+      const allSource = (window.CyberTriageStore ? window.CyberTriageStore.getAllIOCs() : currentLoadedIocs) || [];
+
+      allSource.forEach(item => {
+        const threat = (item.risk || item.threat_level || '').toUpperCase();
+        const type = (item.type || item.ioc_type || '').toUpperCase();
+        if (threat === 'CRITICAL') critCount++;
+        else if (threat === 'HIGH') highCount++;
+
+        if (type === 'IP' || type === 'DOMAIN' || type === 'URL') netCount++;
+        if (type === 'HASH' || type === 'MD5' || type === 'SHA256') hashCount++;
+      });
+
+      if (elCrit) elCrit.textContent = critCount;
+      if (elHigh) elHigh.textContent = highCount;
+      if (elNet) elNet.textContent = netCount;
+      if (elHash) elHash.textContent = hashCount;
+    }
+
+    // 4. Render Table Rows
     tableBody.innerHTML = '';
-    if (filtered.length === 0) {
-      tableBody.innerHTML = `
-        <tr>
-          <td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);" class="font-mono">
-            NO MATCHING INDICATORS OF COMPROMISE FOUND.
-          </td>
-        </tr>
+
+    if (counterEl) {
+      counterEl.textContent = `SHOWING ${currentLoadedIocs.length} INDICATORS`;
+    }
+
+    if (currentLoadedIocs.length === 0) {
+      const emptyRow = document.createElement('tr');
+      emptyRow.innerHTML = `
+        <td colspan="6" style="text-align: center; padding: 36px; color: var(--text-muted);" class="font-mono">
+          NO MATCHING INDICATORS OF COMPROMISE FOUND.
+        </td>
       `;
+      tableBody.appendChild(emptyRow);
       return;
     }
 
-    filtered.forEach(item => {
+    currentLoadedIocs.forEach(item => {
       const tr = document.createElement('tr');
-      const riskClass = `badge-${item.risk.toLowerCase()}`;
+      tr.setAttribute('tabindex', '0');
+      tr.setAttribute('role', 'button');
+
+      const val = item.value || item.ioc || '';
+      const type = item.type || item.ioc_type || 'IP';
+      const threat = (item.risk || item.threat_level || 'MEDIUM').toUpperCase();
+      const badgeClass = `badge-${threat.toLowerCase()}`;
+      const context = item.context || item.description || 'Observed threat artifact';
+      const relIds = item.related_evidence_ids || item.relatedEvidenceIds || [];
+      const relCount = relIds.length;
 
       tr.innerHTML = `
-        <td class="font-mono" style="font-weight: 700; color: var(--text-white); max-width: 320px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${item.ioc}">
-          ${item.ioc}
+        <td class="font-mono" style="font-weight: 600; color: var(--text-white); max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          <span style="color: var(--color-accent-amber); margin-right: 6px;">&bull;</span>
+          <span title="${val}">${val}</span>
         </td>
-        <td><span class="badge badge-type font-mono">${item.type}</span></td>
-        <td class="font-mono" style="color: var(--text-secondary); text-align: center;">${item.occurrences}</td>
-        <td class="font-mono" style="color: var(--text-muted); font-size: 0.72rem; white-space: nowrap;">${item.firstSeen.split(' ')[1] || item.firstSeen}</td>
-        <td class="font-mono" style="color: var(--text-muted); font-size: 0.72rem; white-space: nowrap;">${item.lastSeen.split(' ')[1] || item.lastSeen}</td>
-        <td><span class="badge ${riskClass} font-mono">${item.risk}</span></td>
-        <td class="font-mono" style="color: #fbbf24; font-size: 0.72rem;">${item.status}</td>
+        <td><span class="badge badge-type font-mono">${type}</span></td>
+        <td><span class="badge ${badgeClass} font-mono">${threat}</span></td>
+        <td style="font-size: 0.74rem; color: var(--text-secondary); max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${context}">${context}</td>
         <td>
-          <button type="button" class="table-action-btn font-mono" aria-label="View evidence for ${item.ioc}">VIEW EVIDENCE</button>
+          <span class="chip-btn font-mono" style="font-size: 0.68rem;">
+            ${relCount > 0 ? `${relCount} Associated Artifacts` : 'Direct Detection'}
+          </span>
+        </td>
+        <td style="text-align: right;">
+          <button type="button" class="table-action-btn font-mono">Inspect</button>
         </td>
       `;
 
-      tr.addEventListener('click', () => openIocEvidenceModal(item));
-      const btn = tr.querySelector('.table-action-btn');
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openIocEvidenceModal(item);
+      // Row click opens right drawer
+      tr.addEventListener('click', () => {
+        if (window.openIocDrawer) {
+          window.openIocDrawer(item);
+        }
       });
+
+      // Inspect button click
+      const inspectBtn = tr.querySelector('.table-action-btn');
+      if (inspectBtn) {
+        inspectBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (window.openIocDrawer) {
+            window.openIocDrawer(item);
+          }
+        });
+      }
 
       tableBody.appendChild(tr);
     });
   }
 
-  // Filters & Search
-  if (searchInput) searchInput.addEventListener('input', renderIOCs);
-  if (typeFilter) typeFilter.addEventListener('change', renderIOCs);
-  if (riskFilter) riskFilter.addEventListener('change', renderIOCs);
+  // Filter Listeners
+  if (searchInput) {
+    let debounceTimer = null;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(renderTable, 250);
+    });
+  }
+
+  if (typeFilter) typeFilter.addEventListener('change', renderTable);
+  if (riskFilter) riskFilter.addEventListener('change', renderTable);
 
   // CSV Export
   if (exportCsvBtn) {
     exportCsvBtn.addEventListener('click', () => {
-      const allIocs = window.CyberTriageStore.getAllIOCs();
-      let csv = 'Indicator,Type,Occurrences,FirstSeen,LastSeen,Risk,Status,ASN,Country\n';
-      allIocs.forEach(i => {
-        csv += `"${i.ioc}","${i.type}",${i.occurrences},"${i.firstSeen}","${i.lastSeen}","${i.risk}","${i.status}","${i.asn || ''}","${i.country || ''}"\n`;
-      });
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
+      if (currentLoadedIocs.length === 0) {
+        if (window.showAppToast) window.showAppToast('NO IOCs TO EXPORT');
+        return;
+      }
+
+      const headers = ['Value', 'Type', 'ThreatLevel', 'Context', 'RelatedEvidence'];
+      const rows = currentLoadedIocs.map(item => [
+        `"${item.value || item.ioc || ''}"`,
+        `"${item.type || item.ioc_type || ''}"`,
+        `"${item.risk || item.threat_level || ''}"`,
+        `"${(item.context || item.description || '').replace(/"/g, '""')}"`,
+        `"${(item.related_evidence_ids || item.relatedEvidenceIds || []).join(';')}"`
+      ]);
+
+      const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+      const encodedUri = encodeURI(csvContent);
       const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `cyber_triage_iocs_${Date.now()}.csv`);
+      link.setAttribute('href', encodedUri);
+      link.setAttribute('download', `cyber_triage_iocs_${new Date().toISOString().split('T')[0]}.csv`);
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      if (window.showAppToast) window.showAppToast('IOC THREAT FEED EXPORTED TO CSV');
+
+      if (window.showAppToast) {
+        window.showAppToast(`EXPORTED ${currentLoadedIocs.length} IOCs TO CSV`);
+      }
     });
   }
 
-  // Initial render
-  renderIOCs();
+  // Initial Load
+  renderTable();
 });
